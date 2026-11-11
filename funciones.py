@@ -18,7 +18,7 @@ def Crear_Ventana_Clientes(ventana_padre):
     ventana_padre.withdraw()
     ventana = tk.Toplevel(ventana_padre)
     ventana.title("Clientes")
-    ventana.geometry("1100x600")
+    ventana.geometry("1300x700")
     ventana.configure(bg=est.COLOR_FONDO)
     ventana.protocol("WM_DELETE_WINDOW",
                      lambda: (ventana_padre.deiconify(), ventana.destroy()))
@@ -37,13 +37,15 @@ def Crear_Ventana_Clientes(ventana_padre):
              font=est.FUENTE_SUBTITULO, bg=est.COLOR_FONDO,
              fg=est.COLOR_TEXTO, pady=20).pack(padx=15)
 
-    # Helper etiqueta + entry
+    # Etiqueta + entry
     def campo(etiqueta):
         tk.Label(panel_form, text=etiqueta,
-                 font=est.FUENTE_TEXTO, bg=est.COLOR_FONDO,
-                 fg=est.COLOR_TEXTO, pady=5).pack(padx=5)
+                 font=est.FUENTE_TEXTO, 
+                 bg=est.COLOR_FONDO,
+                 fg=est.COLOR_TEXTO, 
+                 pady=5).pack(padx=5)
         e = tk.Entry(panel_form, justify="center")
-        e.pack(padx=15, pady=8)
+        e.pack(padx=15, pady=15)
         return e
 
     entrada_nombre    = campo("Nombre:")
@@ -153,13 +155,13 @@ def Crear_Ventana_Clientes(ventana_padre):
     # ---- Botones ----
     crear_boton(panel_form, "AGREGAR", accion_agregar,
                 est.FUENTE_BOTONES, est.COLOR_BOTON, est.COLOR_TEXTO,
-                est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8)
+                est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
     crear_boton(panel_form, "ACTUALIZAR", accion_actualizar,
                 est.FUENTE_BOTONES, est.COLOR_BOTON, est.COLOR_TEXTO,
-                est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8)
+                est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
     crear_boton(panel_form, "ELIMINAR", accion_eliminar,
                 est.FUENTE_BOTONES, est.COLOR_BOTON, est.COLOR_TEXTO,
-                est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8)
+                est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
 
     cargar_datos_tabla()
 

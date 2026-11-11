@@ -7,6 +7,9 @@ import os
 #import base datos
 #import funciones
 
+#poner .lower para tipo membresia y hacer un if para solo admitir las membresias que esten en la tabla de membresia
+#poner nacimiento tipo dinamico 3 cuadros modificar .get y la otra cosa
+
 
 ventana_principal = tk.Tk()
 ventana_principal.title("Base de Datos")

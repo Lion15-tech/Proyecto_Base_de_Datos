@@ -1,19 +1,20 @@
-import sqlite3
+import sqlite3 #se importea sqlite3
 
-DATABASE = "GYM.db"
+DATABASE = "GYM.db" #variable ahorrar tiempo
 
-def conectar():
+def conectar(): #Funcion no escribir conexion completo
     return sqlite3.connect(DATABASE)
 
 def crear_tabla():
-    with conectar() as conect:
+    with conectar() as conect: #NOT NULL significa no se puede quedar vacia
         conect.execute("""CREATE TABLE IF NOT EXISTS clientes(
             ID TEXT PRIMARY KEY,
             nombre TEXT NOT NULL,
             apellido TEXT NOT NULL,
             telefono TEXT NOT NULL,
-            tipo_membresia TEXT NOT NULL,
-            fecha_nacimiento TEXT NOT NULL)""")
+            tipo_membresia TEXT NOT NULL, 
+            fecha_nacimiento TEXT NOT NULL)""") 
+    #crea una tabla llamada clientes si no existe, id es primary key (no se debe repetir su valor) nombre, apellido, telefono, tipomembresia, fecha nacimiento
 
 def generar_id(nombre, apellido, tipo_membresia, fecha_nacimiento):
     if not nombre or not apellido or not tipo_membresia or not fecha_nacimiento:
@@ -29,8 +30,8 @@ def generar_id(nombre, apellido, tipo_membresia, fecha_nacimiento):
 
     return f"{inicial_apellido}{inicial_nombre}{inicial_membresia}{fecha_limpia}"
 
-def agregar_cliente(nombre, apellido, telefono, tipo_membresia, fecha_nacimiento):
-    fecha_limpia = fecha_nacimiento.strip().replace("/", "").replace("-", "").replace("_", "")
+def agregar_cliente(nombre, apellido, telefono, tipo_membresia, fecha_nacimiento): #Valores que se pasaran 
+    fecha_limpia = fecha_nacimiento.strip().replace("/", "").replace("-", "").replace("_", "").replace(".", "").replace(",","") #limpia los posibles separadores de fecha
     nuevo_id = generar_id(nombre, apellido, tipo_membresia, fecha_limpia)
     try:
         with conectar() as conect:
