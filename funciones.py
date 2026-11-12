@@ -1,7 +1,20 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import estilos as est
-import base_datos as bd
+import bd_Clientes as bd
+
+
+class Verificar:
+    def __init__(self, quien):
+        self.quien = quien
+
+    def verif(self, evento):
+        print(evento.keysysm)
+        if evento.keysysm == "Return":
+            self.quien.config(bg="#FF0000")
+        else:
+            self.quien.config(bg="#FFFFFF")
+
 
 def crear_boton(padre, texto, comando, fuente_texto,color_fondo, color_texto, color_boton_presionado):
     boton = tk.Button(padre, 
@@ -14,6 +27,31 @@ def crear_boton(padre, texto, comando, fuente_texto,color_fondo, color_texto, co
     return boton
 
 
+def confirmar_accion_eliminar():
+    messagebox.askquestion("Seguro?", "Estas seguro que deseas realizar esta acción?? Esto NO se puede deshacer")
+
+
+def confirmar_accion():
+    messagebox.askquestion("Seguro?", "Estas seguro que deseas realizar esta acción?")
+
+# Etiqueta + entry
+def campo(panel_form, etiqueta):
+    tk.Label(panel_form, text=etiqueta,
+             font=est.FUENTE_TEXTO, 
+             bg=est.COLOR_FONDO,
+             fg=est.COLOR_TEXTO, 
+             pady=5).pack(padx=5)
+    e = tk.Entry(panel_form, justify="center")
+    e.pack(padx=15, pady=15)
+    return e
+
+
+
+### ===================================================== ###
+###                        VENTANAS                       ###
+### ===================================================== ###
+
+## Ventana Clientes terminada!
 def Crear_Ventana_Clientes(ventana_padre):
     ventana_padre.withdraw()
     ventana = tk.Toplevel(ventana_padre)
@@ -29,30 +67,19 @@ def Crear_Ventana_Clientes(ventana_padre):
     panel_tabla = tk.Frame(ventana, bg=est.FONDO_TABLA)
     panel_tabla.pack(side="right", expand=True, fill="both", padx=15, pady=15)
 
-    # ---- Panel del formulario (izquierda) ----
-    panel_form = tk.Frame(ventana, bg=est.COLOR_FONDO, padx=15, pady=15)
-    panel_form.pack(side="left", fill="y")
+    # ---- Panel para modificar (izquierda) ----
+    panel_para_modificar = tk.Frame(ventana, bg=est.COLOR_FONDO, padx=15, pady=15)
+    panel_para_modificar.pack(side="left", fill="y")
 
-    tk.Label(panel_form, text="CLIENTES",
+    tk.Label(panel_para_modificar, text="CLIENTES",
              font=est.FUENTE_SUBTITULO, bg=est.COLOR_FONDO,
              fg=est.COLOR_TEXTO, pady=20).pack(padx=15)
 
-    # Etiqueta + entry
-    def campo(etiqueta):
-        tk.Label(panel_form, text=etiqueta,
-                 font=est.FUENTE_TEXTO, 
-                 bg=est.COLOR_FONDO,
-                 fg=est.COLOR_TEXTO, 
-                 pady=5).pack(padx=5)
-        e = tk.Entry(panel_form, justify="center")
-        e.pack(padx=15, pady=15)
-        return e
-
-    entrada_nombre    = campo("Nombre:")
-    entrada_apellido  = campo("Apellido:")
-    entrada_telefono  = campo("Teléfono:")
-    entrada_membresia = campo("Tipo de membresía:")
-    entrada_fecha     = campo("Fecha nacimiento (DDMMAAAA):")
+    entrada_nombre    = campo(panel_para_modificar, "Nombre:")
+    entrada_apellido  = campo(panel_para_modificar, "Apellido:")
+    entrada_telefono  = campo(panel_para_modificar, "Teléfono:")
+    entrada_membresia = campo(panel_para_modificar, "Tipo de membresía:")
+    entrada_fecha     = campo(panel_para_modificar, "Fecha nacimiento (DD/MM/AAAA):")
 
     # ---- Treeview con 6 columnas ----
     columnas = ("ID", "Nombre", "Apellido", "Teléfono", "Membresía", "Fecha Nac.")
@@ -153,17 +180,30 @@ def Crear_Ventana_Clientes(ventana_padre):
         limpiar_campos()
 
     # ---- Botones ----
-    crear_boton(panel_form, "AGREGAR", accion_agregar,
-                est.FUENTE_BOTONES, est.COLOR_BOTON, est.COLOR_TEXTO,
+    crear_boton(panel_para_modificar, 
+                "AGREGAR", 
+                lambda: (confirmar_accion(), accion_agregar()),
+                est.FUENTE_BOTONES, 
+                est.COLOR_BOTON, 
+                est.COLOR_TEXTO,
                 est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
-    crear_boton(panel_form, "ACTUALIZAR", accion_actualizar,
-                est.FUENTE_BOTONES, est.COLOR_BOTON, est.COLOR_TEXTO,
+    crear_boton(panel_para_modificar, 
+                "ACTUALIZAR", 
+                lambda: (confirmar_accion(), accion_actualizar()),
+                est.FUENTE_BOTONES, 
+                est.COLOR_BOTON, 
+                est.COLOR_TEXTO,
                 est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
-    crear_boton(panel_form, "ELIMINAR", accion_eliminar,
-                est.FUENTE_BOTONES, est.COLOR_BOTON, est.COLOR_TEXTO,
+    crear_boton(panel_para_modificar, 
+                "ELIMINAR", 
+                lambda: (confirmar_accion_eliminar(), accion_eliminar()),
+                est.FUENTE_BOTONES, 
+                est.COLOR_BOTON, 
+                est.COLOR_TEXTO,
                 est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
 
     cargar_datos_tabla()
+
 
 def Crear_Ventana_Estado_Membresia(ventana_padre):
     ventana_padre.withdraw()
@@ -231,7 +271,7 @@ def Crear_Ventana_Estado_Membresia(ventana_padre):
                 est.FUENTE_BOTONES,
                 est.COLOR_BOTON,
                 est.COLOR_TEXTO,
-                est.COLOR_BOTON_EFECTO).pack(padx=15, pady=10)
+                est.COLOR_BOTON_EFECTO).pack(padx=15, pady=10, fill="both")
     # Actualizar 
     crear_boton(panel_para_modificar,
                 "ACTUALIZAR",
@@ -239,7 +279,7 @@ def Crear_Ventana_Estado_Membresia(ventana_padre):
                 est.FUENTE_BOTONES,
                 est.COLOR_BOTON,
                 est.COLOR_TEXTO,
-                est.COLOR_BOTON_EFECTO).pack(padx=15, pady=10)
+                est.COLOR_BOTON_EFECTO).pack(padx=15, pady=10, fill="both")
     # Eliminar
     crear_boton(panel_para_modificar,
                 "ELIMINAR",
@@ -247,7 +287,7 @@ def Crear_Ventana_Estado_Membresia(ventana_padre):
                 est.FUENTE_BOTONES,
                 est.COLOR_BOTON,
                 est.COLOR_TEXTO,
-                est.COLOR_BOTON_EFECTO).pack(padx=15, pady=10)
+                est.COLOR_BOTON_EFECTO).pack(padx=15, pady=10, fill="both")
              
     # --- Widget Treeview (Tabla) ---
     columnas = ("ID", "Tipo de Membresía", "Vigencia", "Fecha de próximo pago")
@@ -663,4 +703,147 @@ def Crear_Ventana_Instalaciones(ventana_padre):
         telefono = tk.Entry(panel_para_modificar,
                         justify="center")
         telefono.pack(padx=15, pady=15)
+
+## SE NECESITA MODIFICAR ESTO PORQUE ES UNA COPIA DE CREAR_VENTANA_CLIENTES
+def Crear_Ventana_Empleados(ventana_padre):
+    ventana_padre.withdraw()
+    ventana = tk.Toplevel(ventana_padre)
+    ventana.title("Empleados")
+    ventana.geometry("1300x700")
+    ventana.configure(bg=est.COLOR_FONDO)
+    ventana.protocol("WM_DELETE_WINDOW",
+                     lambda: (ventana_padre.deiconify(), ventana.destroy()))
+
+    id_cliente_seleccionado = tk.StringVar()
+
+    # ---- Panel de la tabla (derecha) ----
+    panel_tabla = tk.Frame(ventana, bg=est.FONDO_TABLA)
+    panel_tabla.pack(side="right", expand=True, fill="both", padx=15, pady=15)
+
+    # ---- Panel para modificar (izquierda) ----
+    panel_para_modificar = tk.Frame(ventana, bg=est.COLOR_FONDO, padx=15, pady=15)
+    panel_para_modificar.pack(side="left", fill="y")
+
+    tk.Label(panel_para_modificar, text="Empleados",
+             font=est.FUENTE_SUBTITULO, bg=est.COLOR_FONDO,
+             fg=est.COLOR_TEXTO, pady=20).pack(padx=15)
+
+
+
+    entrada_nombre    = campo("Nombre:")
+    entrada_apellido  = campo("Apellido:")
+    entrada_telefono  = campo("Teléfono:")
+    entrada_membresia = campo("Tipo de membresía:")
+    entrada_fecha     = campo("Fecha nacimiento (DDMMAAAA):")
+
+    # ---- Treeview con 6 columnas ----
+    columnas = ("ID", "Nombre", "Apellido", "Teléfono", "Membresía", "Fecha Nac.")
+    tabla = ttk.Treeview(panel_tabla, columns=columnas, show="headings")
+
+    for col in columnas:
+        tabla.heading(col, text=col)
+        tabla.column(col, anchor="center", width=130)
+
+    scrollbar = ttk.Scrollbar(panel_tabla, orient="vertical", command=tabla.yview)
+    tabla.configure(yscrollcommand=scrollbar.set)
+    scrollbar.pack(side="right", fill="y")
+    tabla.pack(expand=True, fill="both")
+
+    # ---- Auxiliares ----
+    def cargar_datos_tabla():
+        for fila in tabla.get_children():
+            tabla.delete(fila)
+        for cliente in bd.ver_clientes():
+            tabla.insert("", "end", values=cliente)
+
+    def limpiar_campos():
+        for e in (entrada_nombre, entrada_apellido, entrada_telefono,
+                  entrada_membresia, entrada_fecha):
+            e.delete(0, tk.END)
+        id_cliente_seleccionado.set("")
+
+    def al_seleccionar_registro(event):
+        item = tabla.focus()
+        if not item:
+            return
+        valores = tabla.item(item, "values")
+        if not valores:
+            return
+        id_cliente_seleccionado.set(valores[0])
+        for entry, valor in zip(
+            (entrada_nombre, entrada_apellido, entrada_telefono,
+             entrada_membresia, entrada_fecha),
+            valores[1:]
+        ):
+            entry.delete(0, tk.END)
+            entry.insert(0, valor)
+
+    tabla.bind("<<TreeviewSelect>>", al_seleccionar_registro)
+
+    # ---- Acciones ----
+    def accion_agregar():
+        n  = entrada_nombre.get().strip()
+        a  = entrada_apellido.get().strip()
+        t  = entrada_telefono.get().strip()
+        tm = entrada_membresia.get().strip()
+        f  = entrada_fecha.get().strip()
+
+        if not (n and a and t and tm and f):
+            messagebox.showwarning("Advertencia", "Completa todos los campos.")
+            return
+        try:
+            nuevo_id = bd.agregar_cliente(n, a, t, tm, f)
+        except ValueError as e:
+            messagebox.showerror("Error", str(e))
+            return
+        messagebox.showinfo("Cliente agregado", f"ID asignado: {nuevo_id}")
+        cargar_datos_tabla()
+        limpiar_campos()
+
+    def accion_actualizar():
+        c_id = id_cliente_seleccionado.get()
+        if not c_id:
+            messagebox.showwarning("Advertencia", "Selecciona un cliente primero.")
+            return
+        try:
+            ok = bd.modificar_cliente(
+                c_id,
+                nombre=entrada_nombre.get().strip(),
+                apellido=entrada_apellido.get().strip(),
+                telefono=entrada_telefono.get().strip(),
+                tipo_membresia=entrada_membresia.get().strip(),
+                fecha_nacimiento=entrada_fecha.get().strip()
+            )
+        except ValueError as e:
+            messagebox.showerror("Error", str(e))
+            return
+        if not ok:
+            messagebox.showerror("Error", "El ID no existe en la base de datos.")
+            return
+        cargar_datos_tabla()
+        limpiar_campos()
+
+    def accion_eliminar():
+        c_id = id_cliente_seleccionado.get()
+        if not c_id:
+            messagebox.showwarning("Advertencia", "Selecciona un cliente primero.")
+            return
+        if not messagebox.askyesno("Confirmar", f"¿Eliminar al cliente {c_id}?"):
+            return
+        bd.eliminar_cliente(c_id)
+        cargar_datos_tabla()
+        limpiar_campos()
+
+    # ---- Botones ----
+    crear_boton(panel_para_modificar, "AGREGAR", accion_agregar,
+                est.FUENTE_BOTONES, est.COLOR_BOTON, est.COLOR_TEXTO,
+                est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
+    crear_boton(panel_para_modificar, "ACTUALIZAR", accion_actualizar,
+                est.FUENTE_BOTONES, est.COLOR_BOTON, est.COLOR_TEXTO,
+                est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
+    crear_boton(panel_para_modificar, "ELIMINAR", accion_eliminar,
+                est.FUENTE_BOTONES, est.COLOR_BOTON, est.COLOR_TEXTO,
+                est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
+
+    cargar_datos_tabla()
 

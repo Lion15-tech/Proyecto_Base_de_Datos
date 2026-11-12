@@ -1,4 +1,4 @@
-import sqlite3 #se importea sqlite3
+import sqlite3 #se importea sqlite3 #UNIQUE (trabajadores)
 
 DATABASE = "GYM.db" #variable ahorrar tiempo
 
@@ -14,32 +14,32 @@ def crear_tabla():
             telefono TEXT NOT NULL,
             tipo_membresia TEXT NOT NULL, 
             fecha_nacimiento TEXT NOT NULL)""") 
-    #crea una tabla llamada clientes si no existe, id es primary key (no se debe repetir su valor) nombre, apellido, telefono, tipomembresia, fecha nacimiento
+    #crea una tabla llamada clientes si no existe, id es primary key (no se debe repetir su valor) nombre, apellido, telefono, tipo de membresia, fecha nacimiento
 
 def generar_id(nombre, apellido, tipo_membresia, fecha_nacimiento):
-    if not nombre or not apellido or not tipo_membresia or not fecha_nacimiento:
-        raise ValueError("Todos los campos son obligatorios")
+    if not nombre or not apellido or not tipo_membresia or not fecha_nacimiento: #Todos los valores deben estar para generar id uncio
+        raise ValueError("Todos los valores son obligatorios >:(") 
 
-    inicial_apellido  = apellido.strip()[0].upper()
-    inicial_nombre  = nombre.strip()[0].upper()
-    inicial_membresia = tipo_membresia.strip()[0].upper()
-    fecha_limpia = fecha_nacimiento.strip().replace("/", "").replace("-", "").replace("_","")
+    inicial_apellido  = apellido.strip()[0].upper() #strip borra espacio primero y ultimo
+    inicial_nombre  = nombre.strip()[0].upper() #[0] agarra el primer caracter
+    inicial_membresia = tipo_membresia.strip()[0].upper() #.upper la vuelve mayuscula
+    fecha_limpia = fecha_nacimiento.strip().replace("/", "").replace("-", "").replace("_","").replace(".","")
+    #Remplaza posibles separaciones usuario
 
-    if len(fecha_limpia) != 8 or not fecha_limpia.isdigit():
-        raise ValueError("La fecha debe tener formato DDMMAAAA")
+    if len(fecha_limpia) != 8 or not fecha_limpia.isdigit(): #si la cantidad de caracteres de fecha es mdistinta a 8 o si hay algo que no es digito (isdigit)
+        raise ValueError("La fecha debe tener formato DD/MM/AAAA")
 
-    return f"{inicial_apellido}{inicial_nombre}{inicial_membresia}{fecha_limpia}"
+    return f"{inicial_apellido}{inicial_nombre}{inicial_membresia}{fecha_limpia}" #da valores en la varible que lo llama
 
 def agregar_cliente(nombre, apellido, telefono, tipo_membresia, fecha_nacimiento): #Valores que se pasaran 
-    fecha_limpia = fecha_nacimiento.strip().replace("/", "").replace("-", "").replace("_", "").replace(".", "").replace(",","") #limpia los posibles separadores de fecha
-    nuevo_id = generar_id(nombre, apellido, tipo_membresia, fecha_limpia)
+    nuevo_id = generar_id(nombre, apellido, tipo_membresia, fecha_nacimiento) #se llama funcion generar ID
     try:
         with conectar() as conect:
             conect.execute(
-                "INSERT INTO clientes (ID, nombre, apellido, telefono, tipo_membresia, fecha_nacimiento) "
-                "VALUES (?, ?, ?, ?, ?, ?)",
-                (nuevo_id, nombre, apellido, telefono, tipo_membresia, fecha_limpia))
-    except sqlite3.IntegrityError:
+                "INSERT INTO clientes (ID, nombre, apellido, telefono, tipo_membresia, fecha_nacimiento) " #insertar valors en tabla clientes (molde)
+                "VALUES (?, ?, ?, ?, ?, ?)", #rodrigo no toques esto!
+                (nuevo_id, nombre, apellido, telefono, tipo_membresia, fecha_nacimiento)) #valores reales qye pasará
+    except sqlite3.IntegrityError: #tipo error cuando se rompe molde
         raise ValueError(f"El ID {nuevo_id} ya existe. Cambia algún dato del cliente.")
     return nuevo_id
 
@@ -48,12 +48,12 @@ def modificar_cliente(ID, **valores):
     valores_modificar = {"nombre", "apellido", "telefono", "tipo_membresia", "fecha_nacimiento"}
 
     if not valores:
-        raise ValueError("No se proporcionó ningún campo a modificar")
+        raise ValueError("No se proporcionaron los valores a modificar")
     if valor_protegido & valores.keys():
         raise ValueError("El ID no se puede modificar")
     if not valores.keys() <= valores_modificar:
         invalidos = valores.keys() - valores_modificar
-        raise ValueError(f"Campos no válidos: {invalidos}")
+        raise ValueError(f"Campos invalidos {invalidos}")
 
     actu = ", ".join(f"{columna} = ?" for columna in valores.keys())
     meter_valor = list(valores.values()) + [ID]
