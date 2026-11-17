@@ -182,8 +182,12 @@ def Crear_Ventana_Clientes(ventana_padre):
         tm = menu_seleccion.get().strip()
         f  = entrada_fecha.get().strip()
 
-        if not (n and a and t and tm and f):
+        if not (n and a and t and tm and f): # Tu codigo es basura   ATTE: Jared
             messagebox.showwarning("Advertencia", "Completa todos los campos.")
+            return
+        if not (n or a).isalpha():
+            return
+        if not t.isdigit():
             return
         if not confirmar_accion():
             return
@@ -200,6 +204,20 @@ def Crear_Ventana_Clientes(ventana_padre):
         c_id = id_cliente_seleccionado.get()
         if not c_id:
             messagebox.showwarning("Advertencia", "Selecciona un cliente primero.")
+            return
+
+        n  = entrada_nombre.get().strip()
+        a  = entrada_apellido.get().strip()
+        t  = entrada_telefono.get().strip()
+        tm = menu_seleccion.get().strip()
+        f  = entrada_fecha.get().strip()
+
+        if not (n and a and t and tm and f):
+            messagebox.showwarning("Advertencia", "Completa todos los campos.")
+            return
+        if not (n or a).isalpha():
+            return
+        if not t.isdigit():
             return
         if not confirmar_accion():
             return
