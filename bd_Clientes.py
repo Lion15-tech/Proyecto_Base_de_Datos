@@ -25,6 +25,7 @@ def generar_id(nombre, apellido, tipo_membresia, fecha_nacimiento):
     inicial_membresia = tipo_membresia.strip()[0].upper() #.upper la vuelve mayuscula
     fecha_limpia = fecha_nacimiento.strip().replace("/", "").replace("-", "").replace("_","").replace(".","")
     #Remplaza posibles separaciones usuario
+    #rodrigo por que no añadiste estoooooo >:(
 
     if len(fecha_limpia) != 8 or not fecha_limpia.isdigit(): #si la cantidad de caracteres de fecha es mdistinta a 8 o si hay algo que no es digito (isdigit)
         raise ValueError("La fecha debe tener formato DD/MM/AAAA")
