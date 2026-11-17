@@ -2,18 +2,40 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import estilos as est
 import bd_Clientes as bd
-
+from datetime import datetime
 
 class Verificar:
-    def __init__(self, quien):
+    def __init__(self, quien, tipo):
         self.quien = quien
+        self.tipo = tipo
 
     def verif(self, evento):
-        print(evento.keysysm)
-        if evento.keysysm == "Return":
-            self.quien.config(bg="#FF0000")
-        else:
+        texto = self.quien.get().strip()
+
+        if not texto:
+            self.quien.config(bg="#FFFFFF") 
+            return True
+
+        es_valido = False
+
+        if self.tipo == "numeros":
+            es_valido = texto.isdigit()
+        elif self.tipo == "texto":
+            es_valido = texto.isalpha()
+        elif self.tipo == "fecha":  # dd/mm/aaaa
+            if len(texto) == 10:
+                try:
+                    datetime.strptime(texto, "%d/%m/%Y")
+                    es_valido = True
+                except ValueError:
+                    es_valido = False
+            else:
+                es_valido = False
+
+        if es_valido == True:
             self.quien.config(bg="#FFFFFF")
+        else:
+            self.quien.config(bg="#C22525")
 
 
 def crear_boton(padre, texto, comando, fuente_texto,color_fondo, color_texto, color_boton_presionado):
@@ -35,15 +57,24 @@ def confirmar_accion():
     messagebox.askquestion("Seguro?", "Estas seguro que deseas realizar esta acción?")
 
 # Etiqueta + entry
-def campo(panel_form, etiqueta):
-    tk.Label(panel_form, text=etiqueta,
-             font=est.FUENTE_TEXTO, 
+def campo(panel_form, etiqueta, tipo_validacion):
+    tk.Label(panel_form,
+             text=etiqueta,
+             font=est.FUENTE_TEXTO,
              bg=est.COLOR_FONDO,
-             fg=est.COLOR_TEXTO, 
-             pady=5).pack(padx=5)
+             fg=est.COLOR_TEXTO,
+             pady=5,
+      ).pack(padx=5)    
+    
     e = tk.Entry(panel_form, justify="center")
-    e.pack(padx=15, pady=15)
+    e.pack(padx=15, pady=15)    
+    
+    validador = Verificar(e, tipo_validacion)
+    
+    # Usamos KeyRelease para leer el texto ya escrito
+    e.bind("<KeyRelease>", validador.verif) 
     return e
+
 
 
 
@@ -75,11 +106,12 @@ def Crear_Ventana_Clientes(ventana_padre):
              font=est.FUENTE_SUBTITULO, bg=est.COLOR_FONDO,
              fg=est.COLOR_TEXTO, pady=20).pack(padx=15)
 
-    entrada_nombre    = campo(panel_para_modificar, "Nombre:")
-    entrada_apellido  = campo(panel_para_modificar, "Apellido:")
-    entrada_telefono  = campo(panel_para_modificar, "Teléfono:")
-    entrada_membresia = campo(panel_para_modificar, "Tipo de membresía:")
-    entrada_fecha     = campo(panel_para_modificar, "Fecha nacimiento (DD/MM/AAAA):")
+    entrada_nombre = campo(panel_para_modificar, "Nombre:", "texto")
+    entrada_apellido = campo(panel_para_modificar, "Apellido:", "texto")
+    entrada_telefono = campo(panel_para_modificar, "Teléfono:", "numeros")
+    entrada_membresia = campo(panel_para_modificar, "Tipo de membresía:", "texto")
+    entrada_fecha = campo(panel_para_modificar, "Fecha nacimiento (DD/MM/AAAA):", "fecha")
+
 
     # ---- Treeview con 6 columnas ----
     columnas = ("ID", "Nombre", "Apellido", "Teléfono", "Membresía", "Fecha Nac.")
