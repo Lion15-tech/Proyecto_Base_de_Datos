@@ -8,6 +8,7 @@ class Verificar:
     def __init__(self, quien, tipo):
         self.quien = quien
         self.tipo = tipo
+        self.es_valido = False
 
     def verif(self, evento):
         texto = self.quien.get().strip()
@@ -16,23 +17,21 @@ class Verificar:
             self.quien.config(bg="#FFFFFF") 
             return True
 
-        es_valido = False
-
         if self.tipo == "numeros":
-            es_valido = texto.isdigit()
+            self.es_valido = texto.isdigit()
         elif self.tipo == "texto":
-            es_valido = texto.isalpha()
+            self.es_valido = texto.isalpha()
         elif self.tipo == "fecha":  # dd/mm/aaaa
             if len(texto) == 10:
                 try:
                     datetime.strptime(texto, "%d/%m/%Y")
-                    es_valido = True
+                    self.es_valido = True
                 except ValueError:
-                    es_valido = False
+                    self.es_valido = False
             else:
-                es_valido = False
+                self.es_valido = False
 
-        if es_valido == True:
+        if self.es_valido == True:
             self.quien.config(bg="#FFFFFF")
         else:
             self.quien.config(bg="#C22525")
@@ -49,12 +48,12 @@ def crear_boton(padre, texto, comando, fuente_texto,color_fondo, color_texto, co
     return boton
 
 
-def confirmar_accion_eliminar():
-    messagebox.askquestion("Seguro?", "Estas seguro que deseas realizar esta acción?? Esto NO se puede deshacer")
-
-
 def confirmar_accion():
-    messagebox.askquestion("Seguro?", "Estas seguro que deseas realizar esta acción?")
+    return messagebox.askyesno("¿Seguro?", "¿Estás seguro que deseas realizar esta acción?")
+
+def confirmar_accion_eliminar():
+    return messagebox.askyesno("¿Seguro?", "¿Estás seguro que deseas realizar esta acción? Esto NO se puede deshacer.")
+
 
 # Etiqueta + entry
 def campo(panel_form, etiqueta, tipo_validacion):
@@ -72,17 +71,17 @@ def campo(panel_form, etiqueta, tipo_validacion):
     validador = Verificar(e, tipo_validacion)
     
     # Usamos KeyRelease para leer el texto ya escrito
-    e.bind("<KeyRelease>", validador.verif) 
+    e.bind("<KeyRelease>", validador.verif)
     return e
 
 
 
 
 ### ===================================================== ###
-###                        VENTANAS                       ###
+#                          VENTANAS                         #
 ### ===================================================== ###
 
-## Ventana Clientes terminada!
+## Ventana Clientes 
 def Crear_Ventana_Clientes(ventana_padre):
     ventana_padre.withdraw()
     ventana = tk.Toplevel(ventana_padre)
@@ -139,7 +138,7 @@ def Crear_Ventana_Clientes(ventana_padre):
             e.delete(0, tk.END)
         id_cliente_seleccionado.set("")
 
-    def al_seleccionar_registro(event):
+    def al_seleccionar_registro(event): #no muevas esto
         item = tabla.focus()
         if not item:
             return
@@ -168,6 +167,8 @@ def Crear_Ventana_Clientes(ventana_padre):
         if not (n and a and t and tm and f):
             messagebox.showwarning("Advertencia", "Completa todos los campos.")
             return
+        if not confirmar_accion():
+            return
         try:
             nuevo_id = bd.agregar_cliente(n, a, t, tm, f)
         except ValueError as e:
@@ -181,6 +182,8 @@ def Crear_Ventana_Clientes(ventana_padre):
         c_id = id_cliente_seleccionado.get()
         if not c_id:
             messagebox.showwarning("Advertencia", "Selecciona un cliente primero.")
+            return
+        if not confirmar_accion():
             return
         try:
             ok = bd.modificar_cliente(
@@ -214,21 +217,21 @@ def Crear_Ventana_Clientes(ventana_padre):
     # ---- Botones ----
     crear_boton(panel_para_modificar, 
                 "AGREGAR", 
-                lambda: (confirmar_accion(), accion_agregar()),
+                lambda: (accion_agregar()),
                 est.FUENTE_BOTONES, 
                 est.COLOR_BOTON, 
                 est.COLOR_TEXTO,
                 est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
     crear_boton(panel_para_modificar, 
                 "ACTUALIZAR", 
-                lambda: (confirmar_accion(), accion_actualizar()),
+                lambda: (accion_actualizar()),
                 est.FUENTE_BOTONES, 
                 est.COLOR_BOTON, 
                 est.COLOR_TEXTO,
                 est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
     crear_boton(panel_para_modificar, 
                 "ELIMINAR", 
-                lambda: (confirmar_accion_eliminar(), accion_eliminar()),
+                lambda: (accion_eliminar()),
                 est.FUENTE_BOTONES, 
                 est.COLOR_BOTON, 
                 est.COLOR_TEXTO,
