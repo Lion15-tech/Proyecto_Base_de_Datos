@@ -108,7 +108,20 @@ def Crear_Ventana_Clientes(ventana_padre):
     entrada_nombre = campo(panel_para_modificar, "Nombre:", "texto")
     entrada_apellido = campo(panel_para_modificar, "Apellido:", "texto")
     entrada_telefono = campo(panel_para_modificar, "Teléfono:", "numeros")
-    entrada_membresia = campo(panel_para_modificar, "Tipo de membresía:", "texto")
+
+    tk.Label(panel_para_modificar,
+             text="Tipo Membresia",
+             font=est.FUENTE_TEXTO,
+             bg=est.COLOR_FONDO,
+             fg=est.COLOR_TEXTO,
+             pady=5).pack(padx=5)
+    membresias = ["", "Básico", "Estandar", "Ultra"]
+    menu_seleccion = ttk.Combobox(panel_para_modificar,
+                 values=membresias,
+                 state="readonly")
+    menu_seleccion.set("")
+    menu_seleccion.pack(pady=10)
+
     entrada_fecha = campo(panel_para_modificar, "Fecha nacimiento (DD/MM/AAAA):", "fecha")
 
 
@@ -134,7 +147,7 @@ def Crear_Ventana_Clientes(ventana_padre):
 
     def limpiar_campos():
         for e in (entrada_nombre, entrada_apellido, entrada_telefono,
-                  entrada_membresia, entrada_fecha):
+                  entrada_fecha):
             e.delete(0, tk.END)
         id_cliente_seleccionado.set("")
 
@@ -148,7 +161,7 @@ def Crear_Ventana_Clientes(ventana_padre):
         id_cliente_seleccionado.set(valores[0])
         for entry, valor in zip(
             (entrada_nombre, entrada_apellido, entrada_telefono,
-             entrada_membresia, entrada_fecha),
+             menu_seleccion, entrada_fecha),
             valores[1:]
         ):
             entry.delete(0, tk.END)
@@ -161,7 +174,7 @@ def Crear_Ventana_Clientes(ventana_padre):
         n  = entrada_nombre.get().strip()
         a  = entrada_apellido.get().strip()
         t  = entrada_telefono.get().strip()
-        tm = entrada_membresia.get().strip()
+        tm = menu_seleccion.get().strip()
         f  = entrada_fecha.get().strip()
 
         if not (n and a and t and tm and f):
@@ -191,7 +204,7 @@ def Crear_Ventana_Clientes(ventana_padre):
                 nombre=entrada_nombre.get().strip(),
                 apellido=entrada_apellido.get().strip(),
                 telefono=entrada_telefono.get().strip(),
-                tipo_membresia=entrada_membresia.get().strip(),
+                tipo_membresia=menu_seleccion.get().strip(),
                 fecha_nacimiento=entrada_fecha.get().strip()
             )
         except ValueError as e:
