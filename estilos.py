@@ -13,8 +13,18 @@ FUENTE_BOTONES = ("Segoe UI", 11, "bold")
 FUENTE_TEXTO = ("Gill Sans", 15, "bold")
 FUENTE_RESULTADO = ("Arial", 11, "bold")
 
+
+
 """
+NOTAS: 
+
 def efectito_chido(boton):
     boton.bind("<Enter>", lambda efect: boton.config(bg=COLOR_BOTON_EFECTO))
     boton.bind("<Leave>", lambda efect: boton.config(bg=COLOR_BOTON))
+
+
+
+    nombre
+    precio
+    cantidad usuarios
 """

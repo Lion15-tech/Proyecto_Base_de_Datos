@@ -37,6 +37,10 @@ class Verificar:
             self.quien.config(bg="#C22525")
 
 
+def efectito_chido(boton):
+    boton.bind("<Enter>", lambda efect: boton.config(bg=est.COLOR_BOTON_EFECTO))
+    boton.bind("<Leave>", lambda efect: boton.config(bg=est.COLOR_BOTON))
+
 def crear_boton(padre, texto, comando, fuente_texto,color_fondo, color_texto, color_boton_presionado):
     boton = tk.Button(padre, 
                     text=texto, 
@@ -45,6 +49,7 @@ def crear_boton(padre, texto, comando, fuente_texto,color_fondo, color_texto, co
                     bg=color_fondo, 
                     fg=color_texto,
                     activebackground=color_boton_presionado)
+    efectito_chido(boton)
     return boton
 
 
