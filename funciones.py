@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 import estilos as est
 import bd_Clientes as bd
 from datetime import datetime
+import bd_tipos_membresia as tm
 
 class Verificar:
     def __init__(self, quien, tipo):
@@ -120,7 +121,7 @@ def Crear_Ventana_Clientes(ventana_padre):
              bg=est.COLOR_FONDO,
              fg=est.COLOR_TEXTO,
              pady=5).pack(padx=5)
-    membresias = ["", "Básico", "Estandar", "Ultra"]
+    membresias = [""] + tm.obtener_nombres_membresias()
     menu_seleccion = ttk.Combobox(panel_para_modificar,
                  values=membresias,
                  state="readonly")
@@ -179,10 +180,10 @@ def Crear_Ventana_Clientes(ventana_padre):
         n  = entrada_nombre.get().strip()
         a  = entrada_apellido.get().strip()
         t  = entrada_telefono.get().strip()
-        tm = menu_seleccion.get().strip()
+        membresia = menu_seleccion.get().strip()
         f  = entrada_fecha.get().strip()
 
-        if not (n and a and t and tm and f): # Tu codigo es basura   ATTE: Jared
+        if not (n and a and t and membresia and f): # Tu codigo es basura   ATTE: Jared
             messagebox.showwarning("Advertencia", "Completa todos los campos.")
             return
         if not (n or a).isalpha():
@@ -192,7 +193,7 @@ def Crear_Ventana_Clientes(ventana_padre):
         if not confirmar_accion():
             return
         try:
-            nuevo_id = bd.agregar_cliente(n, a, t, tm, f)
+            nuevo_id = bd.agregar_cliente(n, a, t, membresia, f)
         except ValueError as e:
             messagebox.showerror("Error", str(e))
             return
@@ -209,10 +210,10 @@ def Crear_Ventana_Clientes(ventana_padre):
         n  = entrada_nombre.get().strip()
         a  = entrada_apellido.get().strip()
         t  = entrada_telefono.get().strip()
-        tm = menu_seleccion.get().strip()
+        membresia = menu_seleccion.get().strip()
         f  = entrada_fecha.get().strip()
 
-        if not (n and a and t and tm and f):
+        if not (n and a and t and membresia and f):
             messagebox.showwarning("Advertencia", "Completa todos los campos.")
             return
         if not (n or a).isalpha():
@@ -728,8 +729,6 @@ def Crear_Ventana_Inversion(ventana_padre):
         costo_unico = tk.Entry(entrys_Zonas,
                         justify="center")
         costo_unico.pack(padx=15, pady=15)
-
-
 
 def Crear_Ventana_Instalaciones(ventana_padre):
         ventana_padre.withdraw()

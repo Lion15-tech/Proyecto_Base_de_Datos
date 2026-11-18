@@ -36,6 +36,14 @@ def ver_membresia():
 #AS cantidad_clientes   le pone un apodo si no seria COUNT(c.ID) 
 #FROM de esta tabla y la apoda tm para facilidas
 
+def obtener_nombres_membresias():
+    with conectar() as conect:
+        nombres = conect.execute("SELECT nombre FROM tipo_membresia").fetchall()
+        obt_nombre = [fila[0] for fila in nombres]
+        return obt_nombre
+if __name__ == "__main__":
+    crear_tabla()
+    nuevo4= añadir_membresia("prueba", 10)
 
 """
 SELECT ...      ← 1. qué columnas quieres
