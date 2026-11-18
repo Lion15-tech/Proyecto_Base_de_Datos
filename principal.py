@@ -9,7 +9,21 @@ import os
 
 #poner .lower para tipo membresia y hacer un if para solo admitir las membresias que esten en la tabla de membresia
 #poner nacimiento tipo dinamico 3 cuadros modificar .get y la otra cosa
+"""
+Errores encontrados:
+    {estesticos}
+    falta resizable false
 
+    {mecanicos}
+    no se puede actualizar la membresia si el usuario tiene una membresia que no hay
+    
+    {messagebox}
+    se puede spamear message box (por alguna razon permite seguir dando clic execpto en la ventana madre)
+    
+    creo que seria mejor si en vez de tanto mesasgebox al dar error fuera un disable en los botones
+    el inconveniente es que ek usuario debe revisar manualmente cuales su error
+    (aunque ya tienes un error cuando un telefono tiene digito no aparece ningun messagebox rodri)
+"""
 def crear_ventana_principal():
     ventana_principal = tk.Tk()
     ventana_principal.title("Base de Datos")
@@ -34,7 +48,7 @@ def crear_ventana_principal():
         bg=est.COLOR_FONDO,
         fg=est.COLOR_TEXTO,
         pady=20
-    ).pack()
+    ).pack()    
 
 
     # ====== BOTONES ======
