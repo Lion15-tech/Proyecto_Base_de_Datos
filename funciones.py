@@ -188,7 +188,7 @@ def Crear_Ventana_Clientes(ventana_padre):
             return
         if not (n or a).isalpha():
             return
-        if not t.isdigit():
+        if not t.isdigit() or len(t) != 10:
             return
         if not confirmar_accion():
             return

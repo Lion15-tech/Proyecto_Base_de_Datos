@@ -22,7 +22,8 @@ Errores encontrados:
     
     creo que seria mejor si en vez de tanto mesasgebox al dar error fuera un disable en los botones
     el inconveniente es que ek usuario debe revisar manualmente cuales su error
-    (aunque ya tienes un error cuando un telefono tiene digito no aparece ningun messagebox rodri)
+    
+    ERROR DE CANTIDAD DE NUMEROS EN EL ENTRY DE TELEFONO SOLUCIONADO
 """
 def crear_ventana_principal():
     ventana_principal = tk.Tk()
