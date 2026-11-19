@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import estilos as est
-import bd_Clientes as bd
+import bd_Clientes as bd_c
 from datetime import datetime
 import bd_tipos_membresia as tm
 
@@ -150,7 +150,7 @@ def Crear_Ventana_Clientes(ventana_padre):
     def cargar_datos_tabla():
         for fila in tabla.get_children():
             tabla.delete(fila)
-        for cliente in bd.ver_clientes():
+        for cliente in bd_c.ver_clientes():
             tabla.insert("", "end", values=cliente)
 
     def limpiar_campos():
@@ -195,7 +195,7 @@ def Crear_Ventana_Clientes(ventana_padre):
         if not confirmar_accion():
             return
         try:
-            nuevo_id = bd.agregar_cliente(n, a, t, membresia, f)
+            nuevo_id = bd_c.agregar_cliente(n, a, t, membresia, f)
         except ValueError as e:
             messagebox.showerror("Error", str(e), parent=ventana)
             return
@@ -225,7 +225,7 @@ def Crear_Ventana_Clientes(ventana_padre):
         if not confirmar_accion():
             return
         try:
-            ok = bd.modificar_cliente(
+            ok = bd_c.modificar_cliente(
                 c_id,
                 nombre=entrada_nombre.get().strip(),
                 apellido=entrada_apellido.get().strip(),
@@ -249,7 +249,7 @@ def Crear_Ventana_Clientes(ventana_padre):
             return
         if not messagebox.askyesno("Confirmar", f"¿Eliminar al cliente {c_id}?", parent=ventana):
             return
-        bd.eliminar_cliente(c_id)
+        bd_c.eliminar_cliente(c_id)
         cargar_datos_tabla()
         limpiar_campos()
 
@@ -278,12 +278,13 @@ def Crear_Ventana_Clientes(ventana_padre):
 
     cargar_datos_tabla()
 
-
+#Arregla tu basura pls
 def Crear_Ventana_Estado_Membresia(ventana_padre):
     ventana_padre.withdraw()
     ventana = tk.Toplevel(ventana_padre)
     ventana.title("Estado de Membresía")
     ventana.geometry("1000x600")
+    ventana.resizable(False,False)
     ventana.configure(bg=est.COLOR_FONDO)
     # Si el usuario cierra la ventana regresa al menu inicial
     ventana.protocol("WM_DELETE_WINDOW", lambda:(ventana_padre.deiconify(), ventana.destroy())) 
@@ -309,7 +310,7 @@ def Crear_Ventana_Estado_Membresia(ventana_padre):
             fg=est.COLOR_TEXTO,
             pady=20
             ).pack(padx=15)
-    # Entrys
+    # Entris
     tk.Label(panel_para_modificar,
                      text="Tipo de Membresía:",
                      font=est.FUENTE_TEXTO,
@@ -372,7 +373,7 @@ def Crear_Ventana_Estado_Membresia(ventana_padre):
         tabla.column(col, anchor="center", width=120)
     
     # Agregar Scrollbar a la tabla
-    scrollbar = ttk.Scrollbar(panel_tabla, orient="vertical", command=tabla.yview)
+    scrollbar = ttk.Scrollbar(panel_tabla, orient="vertical", command=tabla.yview) #nombra mejor variable!!!
     tabla.configure(yscrollcommand=scrollbar.set)
     scrollbar.pack(side="right", fill="y")
     tabla.pack(expand=True, fill="both")
@@ -381,7 +382,7 @@ def Crear_Ventana_Estado_Membresia(ventana_padre):
     def cargar_datos_tabla():
         for fila in tabla.get_children():
             tabla.delete(fila)
-        for cliente in bd.obtener_clientes():
+        for cliente in tm.obtener_nombres_membresias():
             tabla.insert("", "end", values=cliente)
     
     def limpiar_campos():
@@ -414,7 +415,7 @@ def Crear_Ventana_Estado_Membresia(ventana_padre):
     def accion_agregar():
         n, a, t = tipo_membresia.get(), vigencia.get(), fecha_prox_pago.get()
         if n and a and t:
-            bd.agregar_cliente(n, a, t)
+            tm.añadir_membresia(n, a, t)
             cargar_datos_tabla()
             limpiar_campos()
         else:
@@ -426,7 +427,7 @@ def Crear_Ventana_Estado_Membresia(ventana_padre):
             messagebox.showwarning("Advertencia", "Selecciona un usuario de la tabla para modificar.")
             return
         n, a, t = tipo_membresia.get(), vigencia.get(), fecha_prox_pago.get()
-        bd.actualizar_cliente(c_id, n, a, t)
+        tm.actualizar_cliente(c_id, n, a, t)
         cargar_datos_tabla()
         limpiar_campos()
     
@@ -435,7 +436,7 @@ def Crear_Ventana_Estado_Membresia(ventana_padre):
         if not c_id:
             messagebox.showwarning("Advertencia", "Selecciona un usuario de la tabla para eliminar.")
             return
-        bd.eliminar_cliente(c_id)
+        tm.eliminar_membresia(c_id)
         cargar_datos_tabla()
         limpiar_campos()
     # Carga inicial de registros
@@ -474,14 +475,16 @@ def Crear_Ventana_Tipo_Membresia(ventana_padre):
     menu_seleccion.set("Beneficios")
     menu_seleccion.pack(pady=10)
 
-    # Entrys
-    entrada_nombre = campo(panel_para_modificar, "Nombre:", "texto")
-    entrada_apellido = campo(panel_para_modificar, "Apellido:", "texto")
-    entrada_telefono = campo(panel_para_modificar, "Teléfono:", "numeros")
-    entrada_fecha = campo(panel_para_modificar, "Fecha nacimiento (DD/MM/AAAA):", "fecha")
+    # Frames para alternar entre los combobox
+    f_beneficios = tk.Frame(panel_para_modificar, bg=est.COLOR_FONDO, padx=15, pady=15)
+    entrada_nombre = campo(f_beneficios, "Nombre:", "texto")
+    entrada_precio = campo(f_beneficios, "Precio:", "texto")
+    entrada_cant_clientes = campo(f_beneficios, "Cantidad Clientes:", "numeros")
 
-
-    # ---- Treeview con 6 columnas ----
+    f_planes = tk.Frame(panel_para_modificar,  bg=est.COLOR_FONDO, padx=15, pady=15)
+    
+    
+    # ---- Treeview con 3 columnas ----
     columnas = ("Nombe", "Precio", "Cantidad Clientes")
     tabla = ttk.Treeview(panel_tabla, columns=columnas, show="headings")
 
@@ -493,7 +496,7 @@ def Crear_Ventana_Tipo_Membresia(ventana_padre):
     tabla.configure(yscrollcommand=scrollbar.set)
     scrollbar.pack(side="right", fill="y")
     tabla.pack(expand=True, fill="both")
-
+'''
     # ---- Auxiliares ----
     def cargar_datos_tabla():
         for fila in tabla.get_children():
@@ -625,7 +628,7 @@ def Crear_Ventana_Tipo_Membresia(ventana_padre):
                 est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
 
     cargar_datos_tabla()
-
+'''
 
 def Crear_Ventana_Inversion(ventana_padre):
         ventana_padre.withdraw()

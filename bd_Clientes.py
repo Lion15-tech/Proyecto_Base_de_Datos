@@ -66,8 +66,8 @@ def modificar_cliente(ID, **valores):
 
 def eliminar_cliente(ID):
     with conectar() as conect:
-        cur = conect.execute("DELETE FROM clientes WHERE ID = ?", (ID,))
-        return cur.rowcount > 0
+        cursor = conect.execute("DELETE FROM clientes WHERE ID = ?", (ID,))
+        return cursor.rowcount > 0
 
 def ver_clientes():
     with conectar() as conect:
@@ -76,4 +76,4 @@ def ver_clientes():
 
 if __name__ == "__main__":
     crear_tabla()
-    nuevo = agregar_cliente("Carlos", "Colon", "44217249863", "Basica", "10112026")
+    nuevo = agregar_cliente("Carlos", "Colon", "44217249863", "Básico", "10112026")

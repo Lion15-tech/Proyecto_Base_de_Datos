@@ -41,9 +41,42 @@ def obtener_nombres_membresias():
         nombres = conect.execute("SELECT nombre FROM tipo_membresia").fetchall()
         obt_nombre = [fila[0] for fila in nombres]
         return obt_nombre
+    
+
+def modificar_membresia(nombre_original, **valores):
+    valores_modificar = {"precio"}
+    if not valores:
+        raise ValueError("No se proporcionaron los valores a modificar")
+    if not valores.keys() <= valores_modificar:
+        raise ValueError(f"Solo se permite modificar: {valores_modificar}")
+        
+
+    actu = ", ".join(f"{columna} = ?" for columna in valores.keys())
+    meter_valor = list(valores.values()) + [nombre_original]
+    
+
+    actu_membresia = f"UPDATE tipo_membresia SET {actu} WHERE nombre = ?"
+    
+    with conectar() as conect:
+        cursor = conect.execute(actu_membresia, meter_valor)
+        if cursor.rowcount == 0:
+            return False  
+        return True       
+
+def eliminar_membresia(nombre):
+    with conectar() as conect:
+        cursor= conect.execute("DELETE FROM tipo_membresia WHERE nombre = ?", (nombre,))
+        return  cursor.rowcount > 0
+
+
+
 if __name__ == "__main__":
     crear_tabla()
-    nuevo4= añadir_membresia("prueba", 10)
+    nuevo1= añadir_membresia("Básico", 100)
+    nuevo2= añadir_membresia("Estandar", 250)
+    nuevo3= añadir_membresia("Ultra", 500)
+
+
 
 """
 SELECT ...      ← 1. qué columnas quieres
