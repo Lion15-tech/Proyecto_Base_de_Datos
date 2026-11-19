@@ -58,12 +58,12 @@ def crear_boton(padre, texto, comando, fuente_texto,color_fondo, color_texto, co
 def confirmar_accion(ventana):
     return messagebox.askyesno("¿Seguro?", "¿Estás seguro que deseas realizar esta acción?", parent=ventana)
 
+
 def confirmar_accion_eliminar(ventana):
     return messagebox.askyesno("¿Seguro?", "¿Estás seguro que deseas realizar esta acción? Esto NO se puede deshacer.", parent=ventana)
 
 
-# Etiqueta + entry
-def campo(panel_form, etiqueta, tipo_validacion):
+def campo(panel_form, etiqueta, tipo_validacion): # Etiqueta + entry
     tk.Label(panel_form,
              text=etiqueta,
              font=est.FUENTE_TEXTO,
@@ -80,7 +80,6 @@ def campo(panel_form, etiqueta, tipo_validacion):
     # Usamos KeyRelease para leer el texto ya escrito
     e.bind("<KeyRelease>", validador.verif)
     return e
-
 
 
 
@@ -288,7 +287,7 @@ def Crear_Ventana_Estado_Membresia(ventana_padre):
     ventana.configure(bg=est.COLOR_FONDO)
     # Si el usuario cierra la ventana regresa al menu inicial
     ventana.protocol("WM_DELETE_WINDOW", lambda:(ventana_padre.deiconify(), ventana.destroy())) 
-
+'''
     # -- Variable para rastrear el id del cliente -- #
     id_cliente_seleccionado = tk.StringVar()
     
@@ -441,7 +440,7 @@ def Crear_Ventana_Estado_Membresia(ventana_padre):
         limpiar_campos()
     # Carga inicial de registros
     cargar_datos_tabla()
-
+'''
 
 def Crear_Ventana_Tipo_Membresia(ventana_padre):
     ventana_padre.withdraw()
@@ -453,15 +452,36 @@ def Crear_Ventana_Tipo_Membresia(ventana_padre):
     ventana.protocol("WM_DELETE_WINDOW",
                      lambda: (ventana_padre.deiconify(), ventana.destroy()))
 
-    id_cliente_seleccionado = tk.StringVar()
+    membresia_seleccionada = tk.StringVar()
 
     # ---- Panel de la tabla (derecha) ----
     panel_tabla = tk.Frame(ventana, bg=est.FONDO_TABLA)
     panel_tabla.pack(side="right", expand=True, fill="both", padx=15, pady=15)
 
+    columnas = ("Membresía", "Precio", "Clientes Inscritos")
+    tabla = ttk.Treeview(panel_tabla, columns=columnas, show="headings")
+    for col in columnas:
+        tabla.heading(col, text=col)
+        tabla.column(col, anchor="center", width=150)
+    tabla.pack(expand=True, fill="both")
+
     # ---- Panel para modificar (izquierda) ----
     panel_para_modificar = tk.Frame(ventana, bg=est.COLOR_FONDO, padx=15, pady=15)
     panel_para_modificar.pack(side="left", fill="y")
+
+
+    # ---- Auxiliar para combobox ----
+    def cambiar_vista(evento=None):
+            opcion = menu_seleccion.get()
+    
+            f_beneficios.pack_forget()
+            f_planes.pack_forget()
+    
+            if opcion == "Beneficios":
+                f_beneficios.pack(fill="x", pady=10)
+            elif opcion == "Planes":
+                f_planes.pack(fill="x", pady=10)
+
 
     # ------- Titulo -------
     tk.Label(panel_para_modificar, text="Tipos de Membresía",
@@ -472,137 +492,93 @@ def Crear_Ventana_Tipo_Membresia(ventana_padre):
     menu_seleccion = ttk.Combobox(panel_para_modificar,
                                   values=membresias,
                                   state="readonly")
-    menu_seleccion.set("Beneficios")
+    menu_seleccion.set("Planes")
     menu_seleccion.pack(pady=10)
+    menu_seleccion.bind("<<ComboboxSelected>>", cambiar_vista)
+
+    # Este no cambia en las vistas
+    entrada_nombre = campo(panel_para_modificar, "Nombre:", "texto")
+
+    Frame_dinamico = tk.Frame(panel_para_modificar, bg=est.COLOR_FONDO, padx=15, pady=15)
+    Frame_dinamico.pack(fill="x")
 
     # Frames para alternar entre los combobox
-    f_beneficios = tk.Frame(panel_para_modificar, bg=est.COLOR_FONDO, padx=15, pady=15)
-    entrada_nombre = campo(f_beneficios, "Nombre:", "texto")
-    entrada_precio = campo(f_beneficios, "Precio:", "texto")
-    entrada_cant_clientes = campo(f_beneficios, "Cantidad Clientes:", "numeros")
+    f_planes = tk.Frame(Frame_dinamico,  bg=est.COLOR_FONDO, padx=15, pady=15)
+    entrada_precio = campo(f_planes, "Precio:", "numeros")
+    entrada_cant_clientes = campo(f_planes, "Cantidad Clientes:", "numeros")
 
-    f_planes = tk.Frame(panel_para_modificar,  bg=est.COLOR_FONDO, padx=15, pady=15)
-    
-    
-    # ---- Treeview con 3 columnas ----
-    columnas = ("Nombe", "Precio", "Cantidad Clientes")
-    tabla = ttk.Treeview(panel_tabla, columns=columnas, show="headings")
+    f_beneficios = tk.Frame(Frame_dinamico, bg=est.COLOR_FONDO, padx=15, pady=15)
+    entrada_acceso_instalaciones = campo(f_beneficios, "Instalaciones:", "texto")
+    entrada_entrenamiento_per = campo(f_beneficios, "Entrenamiento Personalizado:", "texto")
 
-    for col in columnas:
-        tabla.heading(col, text=col)
-        tabla.column(col, anchor="center", width=130)
+    cambiar_vista()
 
-    scrollbar = ttk.Scrollbar(panel_tabla, orient="vertical", command=tabla.yview)
-    tabla.configure(yscrollcommand=scrollbar.set)
-    scrollbar.pack(side="right", fill="y")
-    tabla.pack(expand=True, fill="both")
-'''
-    # ---- Auxiliares ----
+    # ---- Funciones Auxiliares ----
     def cargar_datos_tabla():
-        for fila in tabla.get_children():
-            tabla.delete(fila)
-        for cliente in bd.ver_clientes():
-            tabla.insert("", "end", values=cliente)
+        for item in tabla.get_children():
+            tabla.delete(item)
+        for fila in tm.ver_membresia():
+            tabla.insert("", "end", values=fila)
 
-    def limpiar_campos():
-        for e in (entrada_nombre, entrada_apellido, entrada_telefono,
-                  entrada_fecha):
-            e.delete(0, tk.END)
-        id_cliente_seleccionado.set("")
+    def limpiar_datos():
+        entrada_nombre.delete(0, tk.END)
+        entrada_precio.delete(0, tk.END)
+        membresia_seleccionada.set("")
 
-    def al_seleccionar_registro(event): #no muevas esto
+    def al_seleccionar_registro(evento):
         item = tabla.focus()
         if not item:
             return
         valores = tabla.item(item, "values")
         if not valores:
             return
-        id_cliente_seleccionado.set(valores[0])
-        for entry, valor in zip(
-            (entrada_nombre, entrada_apellido, entrada_telefono,
-             menu_seleccion, entrada_fecha),
-            valores[1:]
-        ):
-            entry.delete(0, tk.END)
-            entry.insert(0, valor)
+        membresia_seleccionada.set(valores[0])
+        entrada_nombre.delete(0, tk.END)
+        entrada_nombre.insert(0, valores[0])
+        entrada_precio.delete(0, tk.END)
+        entrada_precio.insert(0, valores[1])
 
-    tabla.bind("<<TreeviewSelect>>", al_seleccionar_registro)
+    tabla.bind("<<TreeviewSelected>>", al_seleccionar_registro)
 
-    # ---- Acciones ----
     def accion_agregar():
-        n  = entrada_nombre.get().strip()
-        a  = entrada_apellido.get().strip()
-        t  = entrada_telefono.get().strip()
-        membresia = menu_seleccion.get().strip()
-        f  = entrada_fecha.get().strip()
-
-        if not (n and a and t and membresia and f): # Tu codigo es basura   ATTE: Jared
-            messagebox.showwarning("Advertencia", "Completa todos los campos.", parent=ventana)
-            return
-        if not (n or a).replace(" ", "").isalpha():
-            return
-        if not t.isdigit() or len(t) != 10:
-            return
-        if not confirmar_accion():
+        nombre = entrada_nombre.get().strip()
+        precio = entrada_precio.get().strip()
+        if not (nombre and precio):
             return
         try:
-            nuevo_id = bd.agregar_cliente(n, a, t, membresia, f)
+            tm.añadir_membresia(nombre, float(precio))
+            messagebox.showinfo("Exito", "Membresía agregada", parent=ventana)
+            cargar_datos_tabla()
+            limpiar_datos()
         except ValueError as e:
             messagebox.showerror("Error", str(e), parent=ventana)
-            return
-        messagebox.showinfo("Cliente agregado", f"ID asignado: {nuevo_id}", parent=ventana)
-        cargar_datos_tabla()
-        limpiar_campos()
-
+    
     def accion_actualizar():
-        c_id = id_cliente_seleccionado.get()
-        if not c_id:
-            messagebox.showwarning("Advertencia", "Selecciona un cliente primero.", parent=ventana)
+        nombre = membresia_seleccionada.get()
+        precio = entrada_precio.get().strip()
+        if not nombre:
+            messagebox.showwarning("Advertencia", "Selecciona una membresía de la tabla", parent=ventana)
             return
-
-        n  = entrada_nombre.get().strip()
-        a  = entrada_apellido.get().strip()
-        t  = entrada_telefono.get().strip()
-        membresia = menu_seleccion.get().strip()
-        f  = entrada_fecha.get().strip()
-
-        if not (n and a and t and membresia and f):
-            messagebox.showwarning("Advertencia", "Completa todos los campos.", parent=ventana)
-            return
-        if not (n or a).isalpha():
-            return
-        if not t.isdigit() or len(t) != 10:
-            return
-        if not confirmar_accion():
+        if not precio:
+            messagebox.showwarning("Advertencia", "Ingresa el nuevo precio", parent=ventana)
             return
         try:
-            ok = bd.modificar_cliente(
-                c_id,
-                nombre=entrada_nombre.get().strip(),
-                apellido=entrada_apellido.get().strip(),
-                telefono=entrada_telefono.get().strip(),
-                tipo_membresia=menu_seleccion.get().strip(),
-                fecha_nacimiento=entrada_fecha.get().strip()
-            )
+            tm.modificar_membresia(nombre, precio=float(precio))
+            messagebox.showinfo("Exito", "Precio actualizado", parent=ventana)
+            cargar_datos_tabla()
+            limpiar_datos()
         except ValueError as e:
             messagebox.showerror("Error", str(e), parent=ventana)
-            return
-        if not ok:
-            messagebox.showerror("Error", "El ID no existe en la base de datos.", parent=ventana)
-            return
-        cargar_datos_tabla()
-        limpiar_campos()
 
     def accion_eliminar():
-        c_id = id_cliente_seleccionado.get()
-        if not c_id:
-            messagebox.showwarning("Advertencia", "Selecciona un cliente primero.", parent=ventana)
+        nombre = membresia_seleccionada.get()
+        if not nombre:
+            messagebox.showwarning("Advertencia", "Selecciona una membresía de la tabla", parent=ventana)
             return
-        if not messagebox.askyesno("Confirmar", f"¿Eliminar al cliente {c_id}?", parent=ventana):
-            return
-        bd.eliminar_cliente(c_id)
-        cargar_datos_tabla()
-        limpiar_campos()
+        if messagebox.askyesno("Confirmar", f"Estas 100% seguro que deseas eliminar la membresía {nombre}?", parent=ventana):
+            tm.eliminar_membresia(nombre)
+            cargar_datos_tabla()
+            limpiar_datos()
 
     # ---- Botones ----
     crear_boton(panel_para_modificar, 
@@ -613,7 +589,7 @@ def Crear_Ventana_Tipo_Membresia(ventana_padre):
                 est.COLOR_TEXTO,
                 est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
     crear_boton(panel_para_modificar, 
-                "ACTUALIZAR", 
+                "Modificar", 
                 lambda: (accion_actualizar()),
                 est.FUENTE_BOTONES, 
                 est.COLOR_BOTON, 
@@ -628,7 +604,7 @@ def Crear_Ventana_Tipo_Membresia(ventana_padre):
                 est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
 
     cargar_datos_tabla()
-'''
+
 
 def Crear_Ventana_Inversion(ventana_padre):
         ventana_padre.withdraw()
@@ -791,7 +767,7 @@ def Crear_Ventana_Empleados(ventana_padre):
     def cargar_datos_tabla():
         for fila in tabla.get_children():
             tabla.delete(fila)
-        for cliente in bd.ver_clientes():
+        for cliente in bd_c.ver_clientes():
             tabla.insert("", "end", values=cliente)
 
     def limpiar_campos():
@@ -830,7 +806,7 @@ def Crear_Ventana_Empleados(ventana_padre):
             messagebox.showwarning("Advertencia", "Completa todos los campos.")
             return
         try:
-            nuevo_id = bd.agregar_cliente(n, a, t, tm, f)
+            nuevo_id = bd_c.agregar_cliente(n, a, t, tm, f)
         except ValueError as e:
             messagebox.showerror("Error", str(e))
             return
@@ -844,7 +820,7 @@ def Crear_Ventana_Empleados(ventana_padre):
             messagebox.showwarning("Advertencia", "Selecciona un cliente primero.")
             return
         try:
-            ok = bd.modificar_cliente(
+            ok = bd_c.modificar_cliente(
                 c_id,
                 nombre=entrada_nombre.get().strip(),
                 apellido=entrada_apellido.get().strip(),
@@ -868,7 +844,7 @@ def Crear_Ventana_Empleados(ventana_padre):
             return
         if not messagebox.askyesno("Confirmar", f"¿Eliminar al cliente {c_id}?"):
             return
-        bd.eliminar_cliente(c_id)
+        bd_c.eliminar_cliente(c_id)
         cargar_datos_tabla()
         limpiar_campos()
 
