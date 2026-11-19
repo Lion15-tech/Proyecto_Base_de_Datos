@@ -16,12 +16,13 @@ class Verificar:
 
         if not texto:
             self.quien.config(bg="#FFFFFF") 
+            self.es_valido = False
             return True
 
         if self.tipo == "numeros":
-            self.es_valido = texto.isdigit()
+            self.es_valido = texto.isdigit() and len(texto) == 10
         elif self.tipo == "texto":
-            self.es_valido = texto.isalpha()
+            self.es_valido = texto.replace(" ", "").isalpha()
         elif self.tipo == "fecha":  # dd/mm/aaaa
             if len(texto) == 10:
                 try:
@@ -54,11 +55,11 @@ def crear_boton(padre, texto, comando, fuente_texto,color_fondo, color_texto, co
     return boton
 
 
-def confirmar_accion():
-    return messagebox.askyesno("¿Seguro?", "¿Estás seguro que deseas realizar esta acción?")
+def confirmar_accion(ventana):
+    return messagebox.askyesno("¿Seguro?", "¿Estás seguro que deseas realizar esta acción?", parent=ventana)
 
-def confirmar_accion_eliminar():
-    return messagebox.askyesno("¿Seguro?", "¿Estás seguro que deseas realizar esta acción? Esto NO se puede deshacer.")
+def confirmar_accion_eliminar(ventana):
+    return messagebox.askyesno("¿Seguro?", "¿Estás seguro que deseas realizar esta acción? Esto NO se puede deshacer.", parent=ventana)
 
 
 # Etiqueta + entry
@@ -93,6 +94,7 @@ def Crear_Ventana_Clientes(ventana_padre):
     ventana = tk.Toplevel(ventana_padre)
     ventana.title("Clientes")
     ventana.geometry("1300x700")
+    ventana.resizable(False, False)
     ventana.configure(bg=est.COLOR_FONDO)
     ventana.protocol("WM_DELETE_WINDOW",
                      lambda: (ventana_padre.deiconify(), ventana.destroy()))
@@ -184,9 +186,9 @@ def Crear_Ventana_Clientes(ventana_padre):
         f  = entrada_fecha.get().strip()
 
         if not (n and a and t and membresia and f): # Tu codigo es basura   ATTE: Jared
-            messagebox.showwarning("Advertencia", "Completa todos los campos.")
+            messagebox.showwarning("Advertencia", "Completa todos los campos.", parent=ventana)
             return
-        if not (n or a).isalpha():
+        if not (n or a).replace(" ", "").isalpha():
             return
         if not t.isdigit() or len(t) != 10:
             return
@@ -195,16 +197,16 @@ def Crear_Ventana_Clientes(ventana_padre):
         try:
             nuevo_id = bd.agregar_cliente(n, a, t, membresia, f)
         except ValueError as e:
-            messagebox.showerror("Error", str(e))
+            messagebox.showerror("Error", str(e), parent=ventana)
             return
-        messagebox.showinfo("Cliente agregado", f"ID asignado: {nuevo_id}")
+        messagebox.showinfo("Cliente agregado", f"ID asignado: {nuevo_id}", parent=ventana)
         cargar_datos_tabla()
         limpiar_campos()
 
     def accion_actualizar():
         c_id = id_cliente_seleccionado.get()
         if not c_id:
-            messagebox.showwarning("Advertencia", "Selecciona un cliente primero.")
+            messagebox.showwarning("Advertencia", "Selecciona un cliente primero.", parent=ventana)
             return
 
         n  = entrada_nombre.get().strip()
@@ -214,11 +216,11 @@ def Crear_Ventana_Clientes(ventana_padre):
         f  = entrada_fecha.get().strip()
 
         if not (n and a and t and membresia and f):
-            messagebox.showwarning("Advertencia", "Completa todos los campos.")
+            messagebox.showwarning("Advertencia", "Completa todos los campos.", parent=ventana)
             return
         if not (n or a).isalpha():
             return
-        if not t.isdigit():
+        if not t.isdigit() or len(t) != 10:
             return
         if not confirmar_accion():
             return
@@ -232,10 +234,10 @@ def Crear_Ventana_Clientes(ventana_padre):
                 fecha_nacimiento=entrada_fecha.get().strip()
             )
         except ValueError as e:
-            messagebox.showerror("Error", str(e))
+            messagebox.showerror("Error", str(e), parent=ventana)
             return
         if not ok:
-            messagebox.showerror("Error", "El ID no existe en la base de datos.")
+            messagebox.showerror("Error", "El ID no existe en la base de datos.", parent=ventana)
             return
         cargar_datos_tabla()
         limpiar_campos()
@@ -243,9 +245,9 @@ def Crear_Ventana_Clientes(ventana_padre):
     def accion_eliminar():
         c_id = id_cliente_seleccionado.get()
         if not c_id:
-            messagebox.showwarning("Advertencia", "Selecciona un cliente primero.")
+            messagebox.showwarning("Advertencia", "Selecciona un cliente primero.", parent=ventana)
             return
-        if not messagebox.askyesno("Confirmar", f"¿Eliminar al cliente {c_id}?"):
+        if not messagebox.askyesno("Confirmar", f"¿Eliminar al cliente {c_id}?", parent=ventana):
             return
         bd.eliminar_cliente(c_id)
         cargar_datos_tabla()
