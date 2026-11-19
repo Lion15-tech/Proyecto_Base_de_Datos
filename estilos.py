@@ -28,3 +28,6 @@ def efectito_chido(boton):
     precio
     cantidad usuarios
 """
+'''
+Ey Jared, tu borraste el tag que cree el martes y creaste un tag nuevo???  
+'''
