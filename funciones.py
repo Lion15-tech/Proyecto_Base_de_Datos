@@ -1,9 +1,22 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+from datetime import datetime
 import estilos as est
 import bd_Clientes as bd_c
-from datetime import datetime
 import bd_tipos_membresia as tm
+
+def inicializar_tablas():
+    bd_c.crear_tabla()
+    tm.crear_tabla()
+    for nombre, precio in [("Básico", 100), ("Estandar", 250), ("Ultra", 500)]:
+        try:
+            tm.añadir_membresia(nombre, precio)
+        except ValueError:
+            pass
+    try:
+        bd_c.agregar_cliente("Carlos", "Colon", "4421724986", "Básico", "10/11/2026")
+    except ValueError:
+        pass
 
 class Verificar:
     def __init__(self, quien, tipo):
@@ -156,12 +169,12 @@ def Crear_Ventana_Clientes(ventana_padre):
             tabla.insert("", "end", values=cliente)
 
     def limpiar_campos():
-        for e in (entrada_nombre, entrada_apellido, entrada_telefono,
-                  entrada_fecha):
+        for e in (entrada_nombre, entrada_apellido, entrada_telefono, entrada_fecha):
             e.delete(0, tk.END)
+        menu_seleccion.set("")
         id_cliente_seleccionado.set("")
 
-    def al_seleccionar_registro(event): #no muevas esto
+    def al_seleccionar_registro(event):
         item = tabla.focus()
         if not item:
             return
@@ -170,12 +183,12 @@ def Crear_Ventana_Clientes(ventana_padre):
             return
         id_cliente_seleccionado.set(valores[0])
         for entry, valor in zip(
-            (entrada_nombre, entrada_apellido, entrada_telefono,
-             menu_seleccion, entrada_fecha),
-            valores[1:]
+            (entrada_nombre, entrada_apellido, entrada_telefono, entrada_fecha),
+            (valores[1], valores[2], valores[3], valores[5])
         ):
             entry.delete(0, tk.END)
             entry.insert(0, valor)
+        menu_seleccion.set(valores[4])
 
     tabla.bind("<<TreeviewSelect>>", al_seleccionar_registro)
 
@@ -594,8 +607,8 @@ def Crear_Ventana_Tipo_Membresia(ventana_padre):
     def accion_eliminar():
         nombre = membresia_seleccionada.get()
         e_cli = entrada_cant_clientes.get().strip()
-        if len(e_cli) > 0:
-            messagebox.showerror("Error", "Esta membresía tiene clientes activos")
+        if e_cli and int(e_cli) > 0:
+            messagebox.showerror("Error", "Esta membresía tiene clientes activos.", parent=ventana)
             return
         if not nombre:
             messagebox.showwarning("Advertencia", "Selecciona una membresía de la tabla", parent=ventana)

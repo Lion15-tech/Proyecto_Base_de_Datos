@@ -8,6 +8,7 @@ import os
 #import funciones
 
 def crear_ventana_principal():
+    func.inicializar_tablas()
     ventana_principal = tk.Tk()
     ventana_principal.title("Base de Datos")
     ventana_principal.resizable(False, False)
@@ -97,8 +98,6 @@ def crear_ventana_principal():
         est.COLOR_BOTON_EFECTO).pack(padx=50, pady=20, fill="both")
 
     ventana_principal.mainloop()
-
-    # Aquí hay que crear las tablas para evitar que se rompa
 
 
 if __name__ == "__main__":
