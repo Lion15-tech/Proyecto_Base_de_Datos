@@ -7,49 +7,6 @@ import os
 #import base datos
 #import funciones
 
-#poner .lower para tipo membresia y hacer un if para solo admitir las membresias que esten en la tabla de membresia
-#poner nacimiento tipo dinamico 3 cuadros modificar .get y la otra cosa
-"""
-Errores encontrados:
-    {estesticos}
-    falta resizable false
-
-    {mecanicos}
-    no se puede actualizar la membresia si el usuario tiene una membresia que no hay
-    Rodrigo: supongo que eso ya quedó solucionado cuando borraste toda la BD y creaste una nueva donde 
-    ahorita solo permite el colocar las del comobobox, no?
-    
-    {messagebox}
-    se puede spamear message box (por alguna razon permite seguir dando clic execpto en la ventana madre)
-    Rodrigo: me salio un error muy curioso al estar viendo que onda en linux jajaja no se si es por i3wm o algo
-    más, pero salió esto:
-        '󰣇 lionx in ~/Proyectos/Proyecto_Base_de_Datos on  main ❯ python principal.py 
-         Exception in Tkinter callback
-         Traceback (most recent call last):
-           File "/usr/lib/python3.14/tkinter/__init__.py", line 2114, in __call__
-             return self.func(*args)
-                    ~~~~~~~~~^^^^^^^
-           File "/home/lionx/Proyectos/Proyecto_Base_de_Datos/funciones.py", line 264, in <lambda>
-             lambda: (accion_actualizar()),
-                      ~~~~~~~~~~~~~~~~~^^
-           File "/home/lionx/Proyectos/Proyecto_Base_de_Datos/funciones.py", line 207, in accion_actualizar
-             messagebox.showwarning("Advertencia", "Selecciona un cliente primero.")
-             ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-           File "/usr/lib/python3.14/tkinter/messagebox.py", line 95, in showwarning
-             return _show(title, message, WARNING, OK, **options)
-           File "/usr/lib/python3.14/tkinter/messagebox.py", line 78, in _show
-             res = Message(**options).show()
-           File "/usr/lib/python3.14/tkinter/commondialog.py", line 47, in show
-             s = master.tk.call(self.command, *master._options(self.options))
-         _tkinter.TclError: can't invoke "grab" command: application has been destroyed'
-    Mañana lo reviso en la compu de la escuela
-
-    creo que seria mejor si en vez de tanto mesasgebox al dar error fuera un disable en los botones
-    el inconveniente es que ek usuario debe revisar manualmente cuales su error
-    Rodrigo: esto lo podemos debatir mañana para ver que combiene más
-    
-    ERROR DE CANTIDAD DE NUMEROS EN EL ENTRY DE TELEFONO SOLUCIONADO
-"""
 def crear_ventana_principal():
     ventana_principal = tk.Tk()
     ventana_principal.title("Base de Datos")
@@ -141,8 +98,54 @@ def crear_ventana_principal():
 
     ventana_principal.mainloop()
 
+    # Aquí hay que crear las tablas para evitar que se rompa
+
 
 if __name__ == "__main__":
     crear_ventana_principal()
 
-#HORAS GASTADAS: 25
+#HORAS GASTADAS: 27
+
+#poner .lower para tipo membresia y hacer un if para solo admitir las membresias que esten en la tabla de membresia
+#poner nacimiento tipo dinamico 3 cuadros modificar .get y la otra cosa
+"""
+Errores encontrados:
+    {estesticos}
+    falta resizable false
+
+    {mecanicos}
+    no se puede actualizar la membresia si el usuario tiene una membresia que no hay
+    Rodrigo: supongo que eso ya quedó solucionado cuando borraste toda la BD y creaste una nueva donde 
+    ahorita solo permite el colocar las del comobobox, no?
+    
+    {messagebox}
+    se puede spamear message box (por alguna razon permite seguir dando clic execpto en la ventana madre)
+    Rodrigo: me salio un error muy curioso al estar viendo que onda en linux jajaja no se si es por i3wm o algo
+    más, pero salió esto:
+        '󰣇 lionx in ~/Proyectos/Proyecto_Base_de_Datos on  main ❯ python principal.py 
+         Exception in Tkinter callback
+         Traceback (most recent call last):
+           File "/usr/lib/python3.14/tkinter/__init__.py", line 2114, in __call__
+             return self.func(*args)
+                    ~~~~~~~~~^^^^^^^
+           File "/home/lionx/Proyectos/Proyecto_Base_de_Datos/funciones.py", line 264, in <lambda>
+             lambda: (accion_actualizar()),
+                      ~~~~~~~~~~~~~~~~~^^
+           File "/home/lionx/Proyectos/Proyecto_Base_de_Datos/funciones.py", line 207, in accion_actualizar
+             messagebox.showwarning("Advertencia", "Selecciona un cliente primero.")
+             ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+           File "/usr/lib/python3.14/tkinter/messagebox.py", line 95, in showwarning
+             return _show(title, message, WARNING, OK, **options)
+           File "/usr/lib/python3.14/tkinter/messagebox.py", line 78, in _show
+             res = Message(**options).show()
+           File "/usr/lib/python3.14/tkinter/commondialog.py", line 47, in show
+             s = master.tk.call(self.command, *master._options(self.options))
+         _tkinter.TclError: can't invoke "grab" command: application has been destroyed'
+    Mañana lo reviso en la compu de la escuela
+
+    creo que seria mejor si en vez de tanto mesasgebox al dar error fuera un disable en los botones
+    el inconveniente es que ek usuario debe revisar manualmente cuales su error
+    Rodrigo: esto lo podemos debatir mañana para ver que combiene más
+    
+    ERROR DE CANTIDAD DE NUMEROS EN EL ENTRY DE TELEFONO SOLUCIONADO
+"""

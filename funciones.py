@@ -20,6 +20,8 @@ class Verificar:
             return True
 
         if self.tipo == "numeros":
+            self.es_valido = texto.isdigit()
+        elif self.tipo == "telefono":
             self.es_valido = texto.isdigit() and len(texto) == 10
         elif self.tipo == "texto":
             self.es_valido = texto.replace(" ", "").isalpha()
@@ -42,6 +44,7 @@ class Verificar:
 def efectito_chido(boton):
     boton.bind("<Enter>", lambda efect: boton.config(bg=est.COLOR_BOTON_EFECTO))
     boton.bind("<Leave>", lambda efect: boton.config(bg=est.COLOR_BOTON))
+
 
 def crear_boton(padre, texto, comando, fuente_texto,color_fondo, color_texto, color_boton_presionado):
     boton = tk.Button(padre, 
@@ -114,7 +117,7 @@ def Crear_Ventana_Clientes(ventana_padre):
 
     entrada_nombre = campo(panel_para_modificar, "Nombre:", "texto")
     entrada_apellido = campo(panel_para_modificar, "Apellido:", "texto")
-    entrada_telefono = campo(panel_para_modificar, "Teléfono:", "numeros")
+    entrada_telefono = campo(panel_para_modificar, "Teléfono:", "telefono")
 
     tk.Label(panel_para_modificar,
              text="Tipo Membresia",
@@ -187,11 +190,13 @@ def Crear_Ventana_Clientes(ventana_padre):
         if not (n and a and t and membresia and f): # Tu codigo es basura   ATTE: Jared
             messagebox.showwarning("Advertencia", "Completa todos los campos.", parent=ventana)
             return
-        if not (n or a).replace(" ", "").isalpha():
+        if not (n.replace(" ", "").isalpha() and a.replace(" ", "").isalpha()):
+            messagebox.showwarning("Advertencia", "Escribe solo letras en nombre y apellido", parent=ventana)
             return
         if not t.isdigit() or len(t) != 10:
+            messagebox.showwarning("Advertencia", "Escribe solo numeros en e Teléfono", parent=ventana)
             return
-        if not confirmar_accion():
+        if not confirmar_accion(ventana):
             return
         try:
             nuevo_id = bd_c.agregar_cliente(n, a, t, membresia, f)
@@ -217,11 +222,13 @@ def Crear_Ventana_Clientes(ventana_padre):
         if not (n and a and t and membresia and f):
             messagebox.showwarning("Advertencia", "Completa todos los campos.", parent=ventana)
             return
-        if not (n or a).isalpha():
+        if not (n.replace(" ", "").isalpha() and a.replace(" ", "").isalpha()):
+            messagebox.showwarning("Advertencia", "Escribe solo letras en nombre y apellido", parent=ventana)
             return
         if not t.isdigit() or len(t) != 10:
+            messagebox.showwarning("Advertencia", "Escribe solo números en Teléfono", parent=ventana)
             return
-        if not confirmar_accion():
+        if not confirmar_accion(ventana):
             return
         try:
             ok = bd_c.modificar_cliente(
@@ -445,7 +452,7 @@ def Crear_Ventana_Estado_Membresia(ventana_padre):
 def Crear_Ventana_Tipo_Membresia(ventana_padre):
     ventana_padre.withdraw()
     ventana = tk.Toplevel(ventana_padre)
-    ventana.title("Clientes")
+    ventana.title("Tipos de Membresía")
     ventana.geometry("1300x700")
     ventana.resizable(False, False)
     ventana.configure(bg=est.COLOR_FONDO)
@@ -506,6 +513,7 @@ def Crear_Ventana_Tipo_Membresia(ventana_padre):
     f_planes = tk.Frame(Frame_dinamico,  bg=est.COLOR_FONDO, padx=15, pady=15)
     entrada_precio = campo(f_planes, "Precio:", "numeros")
     entrada_cant_clientes = campo(f_planes, "Cantidad Clientes:", "numeros")
+    entrada_cant_clientes.config(state="readonly")
 
     f_beneficios = tk.Frame(Frame_dinamico, bg=est.COLOR_FONDO, padx=15, pady=15)
     entrada_acceso_instalaciones = campo(f_beneficios, "Instalaciones:", "texto")
@@ -521,8 +529,14 @@ def Crear_Ventana_Tipo_Membresia(ventana_padre):
             tabla.insert("", "end", values=fila)
 
     def limpiar_datos():
-        entrada_nombre.delete(0, tk.END)
-        entrada_precio.delete(0, tk.END)
+        for e in (entrada_nombre, entrada_precio,
+                  entrada_acceso_instalaciones, entrada_entrenamiento_per):
+            e.delete(0, tk.END)
+
+        entrada_cant_clientes.config(state="normal")
+        entrada_cant_clientes.delete(0, tk.END)
+        entrada_cant_clientes.config(state="readonly")
+
         membresia_seleccionada.set("")
 
     def al_seleccionar_registro(evento):
@@ -533,12 +547,19 @@ def Crear_Ventana_Tipo_Membresia(ventana_padre):
         if not valores:
             return
         membresia_seleccionada.set(valores[0])
+
         entrada_nombre.delete(0, tk.END)
         entrada_nombre.insert(0, valores[0])
+
         entrada_precio.delete(0, tk.END)
         entrada_precio.insert(0, valores[1])
 
-    tabla.bind("<<TreeviewSelected>>", al_seleccionar_registro)
+        entrada_cant_clientes.config(state="normal")
+        entrada_cant_clientes.delete(0, tk.END)
+        entrada_cant_clientes.insert(0, valores[2])
+        entrada_cant_clientes.config(state="readonly")
+
+    tabla.bind("<<TreeviewSelect>>", al_seleccionar_registro)
 
     def accion_agregar():
         nombre = entrada_nombre.get().strip()
@@ -572,6 +593,10 @@ def Crear_Ventana_Tipo_Membresia(ventana_padre):
 
     def accion_eliminar():
         nombre = membresia_seleccionada.get()
+        e_cli = entrada_cant_clientes.get().strip()
+        if len(e_cli) > 0:
+            messagebox.showerror("Error", "Esta membresía tiene clientes activos")
+            return
         if not nombre:
             messagebox.showwarning("Advertencia", "Selecciona una membresía de la tabla", parent=ventana)
             return
