@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 import estilos as est
 import funciones as func
-import principal
+import principal as principal
 import os
 
 def login():

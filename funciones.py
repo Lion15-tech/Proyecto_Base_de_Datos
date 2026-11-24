@@ -1,13 +1,15 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from datetime import datetime
+from datetime import datetime, timedelta
 import estilos as est
 import bd_Clientes as bd_c
 import bd_tipos_membresia as tm
+import bd_estado_membresia as bam
 
 def inicializar_tablas():
     bd_c.crear_tabla()
     tm.crear_tabla()
+    bam.crear_tabla()
     for nombre, precio in [("Básico", 100), ("Estandar", 250), ("Ultra", 500)]:
         try:
             tm.añadir_membresia(nombre, precio)
@@ -17,6 +19,12 @@ def inicializar_tablas():
         bd_c.agregar_cliente("Carlos", "Colon", "4421724986", "Básico", "10/11/2026")
     except ValueError:
         pass
+    for cliente in bd_c.ver_clientes():
+        try:
+            bam.registrar_estado_inicial(cliente[0])
+        except Exception:
+            pass
+
 
 class Verificar:
     def __init__(self, quien, tipo):
@@ -59,14 +67,14 @@ def efectito_chido(boton):
     boton.bind("<Leave>", lambda efect: boton.config(bg=est.COLOR_BOTON))
 
 
-def crear_boton(padre, texto, comando, fuente_texto,color_fondo, color_texto, color_boton_presionado):
+def crear_boton(padre, texto, comando, fuente_texto, color_fondo, color_texto, color_boton_presionado):
     boton = tk.Button(padre, 
-                    text=texto, 
-                    command=comando,
-                    font=fuente_texto,
-                    bg=color_fondo, 
-                    fg=color_texto,
-                    activebackground=color_boton_presionado)
+                      text=texto, 
+                      command=comando,
+                      font=fuente_texto,
+                      bg=color_fondo, 
+                      fg=color_texto,
+                      activebackground=color_boton_presionado)
     efectito_chido(boton)
     return boton
 
@@ -96,7 +104,6 @@ def campo(panel_form, etiqueta, tipo_validacion): # Etiqueta + entry
     # Usamos KeyRelease para leer el texto ya escrito
     e.bind("<KeyRelease>", validador.verif)
     return e
-
 
 
 ### ===================================================== ###
@@ -140,13 +147,12 @@ def Crear_Ventana_Clientes(ventana_padre):
              pady=5).pack(padx=5)
     membresias = [""] + tm.obtener_nombres_membresias()
     menu_seleccion = ttk.Combobox(panel_para_modificar,
-                 values=membresias,
-                 state="readonly")
+                                  values=membresias,
+                                  state="readonly")
     menu_seleccion.set("")
     menu_seleccion.pack(pady=10)
 
     entrada_fecha = campo(panel_para_modificar, "Fecha nacimiento (DD/MM/AAAA):", "fecha")
-
 
     # ---- Treeview con 6 columnas ----
     columnas = ("ID", "Nombre", "Apellido", "Teléfono", "Membresía", "Fecha Nac.")
@@ -170,7 +176,9 @@ def Crear_Ventana_Clientes(ventana_padre):
 
     def limpiar_campos():
         for e in (entrada_nombre, entrada_apellido, entrada_telefono, entrada_fecha):
+            e.config(state="normal")
             e.delete(0, tk.END)
+            e.config(bg="#FFFFFF")
         menu_seleccion.set("")
         id_cliente_seleccionado.set("")
 
@@ -186,33 +194,43 @@ def Crear_Ventana_Clientes(ventana_padre):
             (entrada_nombre, entrada_apellido, entrada_telefono, entrada_fecha),
             (valores[1], valores[2], valores[3], valores[5])
         ):
+            entry.config(state="normal")
             entry.delete(0, tk.END)
             entry.insert(0, valor)
+            entry.config(bg="#FFFFFF")
+        for entry in (entrada_nombre, entrada_apellido, entrada_fecha):
+            entry.config(state="readonly")
         menu_seleccion.set(valores[4])
 
     tabla.bind("<<TreeviewSelect>>", al_seleccionar_registro)
 
     # ---- Acciones ----
     def accion_agregar():
-        n  = entrada_nombre.get().strip()
-        a  = entrada_apellido.get().strip()
-        t  = entrada_telefono.get().strip()
+        n = entrada_nombre.get().strip()
+        a = entrada_apellido.get().strip()
+        t = entrada_telefono.get().strip()
         membresia = menu_seleccion.get().strip()
-        f  = entrada_fecha.get().strip()
+        f = entrada_fecha.get().strip()
 
-        if not (n and a and t and membresia and f): # Tu codigo es basura   ATTE: Jared
+        if not (n and a and t and membresia and f):
             messagebox.showwarning("Advertencia", "Completa todos los campos.", parent=ventana)
             return
         if not (n.replace(" ", "").isalpha() and a.replace(" ", "").isalpha()):
-            messagebox.showwarning("Advertencia", "Escribe solo letras en nombre y apellido", parent=ventana)
+            messagebox.showwarning("Advertencia", "Escribe solo letras en nombre y apellido.", parent=ventana)
             return
         if not t.isdigit() or len(t) != 10:
-            messagebox.showwarning("Advertencia", "Escribe solo numeros en e Teléfono", parent=ventana)
+            messagebox.showwarning("Advertencia", "Escribe solo 10 números en Teléfono.", parent=ventana)
+            return
+        try:
+            datetime.strptime(f, "%d/%m/%Y")
+        except ValueError:
+            messagebox.showwarning("Advertencia", "Formato de fecha inválido (DD/MM/AAAA).", parent=ventana)
             return
         if not confirmar_accion(ventana):
             return
         try:
             nuevo_id = bd_c.agregar_cliente(n, a, t, membresia, f)
+            bam.registrar_estado_inicial(nuevo_id)
         except ValueError as e:
             messagebox.showerror("Error", str(e), parent=ventana)
             return
@@ -226,31 +244,36 @@ def Crear_Ventana_Clientes(ventana_padre):
             messagebox.showwarning("Advertencia", "Selecciona un cliente primero.", parent=ventana)
             return
 
-        n  = entrada_nombre.get().strip()
-        a  = entrada_apellido.get().strip()
-        t  = entrada_telefono.get().strip()
+        n = entrada_nombre.get().strip()
+        a = entrada_apellido.get().strip()
+        t = entrada_telefono.get().strip()
         membresia = menu_seleccion.get().strip()
-        f  = entrada_fecha.get().strip()
+        f = entrada_fecha.get().strip()
 
         if not (n and a and t and membresia and f):
             messagebox.showwarning("Advertencia", "Completa todos los campos.", parent=ventana)
             return
         if not (n.replace(" ", "").isalpha() and a.replace(" ", "").isalpha()):
-            messagebox.showwarning("Advertencia", "Escribe solo letras en nombre y apellido", parent=ventana)
+            messagebox.showwarning("Advertencia", "Escribe solo letras en nombre y apellido.", parent=ventana)
             return
         if not t.isdigit() or len(t) != 10:
-            messagebox.showwarning("Advertencia", "Escribe solo números en Teléfono", parent=ventana)
+            messagebox.showwarning("Advertencia", "Escribe solo 10 números en Teléfono.", parent=ventana)
+            return
+        try:
+            datetime.strptime(f, "%d/%m/%Y")
+        except ValueError:
+            messagebox.showwarning("Advertencia", "Formato de fecha inválido (DD/MM/AAAA).", parent=ventana)
             return
         if not confirmar_accion(ventana):
             return
         try:
             ok = bd_c.modificar_cliente(
                 c_id,
-                nombre=entrada_nombre.get().strip(),
-                apellido=entrada_apellido.get().strip(),
-                telefono=entrada_telefono.get().strip(),
-                tipo_membresia=menu_seleccion.get().strip(),
-                fecha_nacimiento=entrada_fecha.get().strip()
+                nombre=n,
+                apellido=a,
+                telefono=t,
+                tipo_membresia=membresia,
+                fecha_nacimiento=f
             )
         except ValueError as e:
             messagebox.showerror("Error", str(e), parent=ventana)
@@ -269,27 +292,35 @@ def Crear_Ventana_Clientes(ventana_padre):
         if not messagebox.askyesno("Confirmar", f"¿Eliminar al cliente {c_id}?", parent=ventana):
             return
         bd_c.eliminar_cliente(c_id)
+        bam.eliminar_estado(c_id)
         cargar_datos_tabla()
         limpiar_campos()
 
     # ---- Botones ----
     crear_boton(panel_para_modificar, 
                 "AGREGAR", 
-                lambda: (accion_agregar()),
+                accion_agregar,
                 est.FUENTE_BOTONES, 
                 est.COLOR_BOTON, 
                 est.COLOR_TEXTO,
                 est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
     crear_boton(panel_para_modificar, 
                 "ACTUALIZAR", 
-                lambda: (accion_actualizar()),
+                accion_actualizar,
                 est.FUENTE_BOTONES, 
                 est.COLOR_BOTON, 
                 est.COLOR_TEXTO,
                 est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
     crear_boton(panel_para_modificar, 
                 "ELIMINAR", 
-                lambda: (accion_eliminar()),
+                accion_eliminar,
+                est.FUENTE_BOTONES, 
+                est.COLOR_BOTON, 
+                est.COLOR_TEXTO,
+                est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
+    crear_boton(panel_para_modificar, 
+                "LIMPIAR", 
+                lambda: (tabla.selection_remove(tabla.selection()), limpiar_campos()),
                 est.FUENTE_BOTONES, 
                 est.COLOR_BOTON, 
                 est.COLOR_TEXTO,
@@ -297,171 +328,123 @@ def Crear_Ventana_Clientes(ventana_padre):
 
     cargar_datos_tabla()
 
-#Arregla tu basura pls
+
+## Ventana Estado Membresía
 def Crear_Ventana_Estado_Membresia(ventana_padre):
     ventana_padre.withdraw()
     ventana = tk.Toplevel(ventana_padre)
     ventana.title("Estado de Membresía")
-    ventana.geometry("1000x600")
-    ventana.resizable(False,False)
+    ventana.geometry("1300x700")
+    ventana.resizable(False, False)
     ventana.configure(bg=est.COLOR_FONDO)
-    # Si el usuario cierra la ventana regresa al menu inicial
-    ventana.protocol("WM_DELETE_WINDOW", lambda:(ventana_padre.deiconify(), ventana.destroy())) 
-'''
-    # -- Variable para rastrear el id del cliente -- #
-    id_cliente_seleccionado = tk.StringVar()
-    
-    # Creamos el Frame donde ingresar los datos
-    panel_para_modificar = tk.Frame(ventana,
-                            bg=est.COLOR_FONDO,
-                            padx=15,
-                            pady=15)
-    panel_para_modificar.pack(side="left", fill="y")
-    # Creamos el Frame para la tabla
-    panel_tabla = tk.Frame(ventana,
-                            bg=est.FONDO_TABLA)
+    ventana.protocol("WM_DELETE_WINDOW", lambda: (ventana_padre.deiconify(), ventana.destroy()))
+
+    # ---- Panel de la tabla (derecha) ----
+    panel_tabla = tk.Frame(ventana, bg=est.FONDO_TABLA)
     panel_tabla.pack(side="right", expand=True, fill="both", padx=15, pady=15)
-    # ------ Titulo ------
-    tk.Label(panel_para_modificar,
-            text="ESTADO DE \nMEMBRESÍA",
-            font=est.FUENTE_SUBTITULO,
-            bg=est.COLOR_FONDO,
-            fg=est.COLOR_TEXTO,
-            pady=20
-            ).pack(padx=15)
-    # Entris
-    tk.Label(panel_para_modificar,
-                     text="Tipo de Membresía:",
-                     font=est.FUENTE_TEXTO,
-                     bg=est.COLOR_FONDO,
-                     fg=est.COLOR_TEXTO,
-                     pady=5).pack(padx=5)
-    tipo_membresia = tk.Entry(panel_para_modificar,
-                    justify="center")
-    tipo_membresia.pack(padx=15, pady=15)
-    tk.Label(panel_para_modificar,
-                             text="Vigencia:",
-                             font=est.FUENTE_TEXTO,
-                             bg=est.COLOR_FONDO,
-                             fg=est.COLOR_TEXTO,
-                             pady=5).pack(padx=5)
-    vigencia = tk.Entry(panel_para_modificar,
-                    justify="center")
-    vigencia.pack(padx=15, pady=15)
-    tk.Label(panel_para_modificar,
-                             text="Fecha de Pago:",
-                             font=est.FUENTE_TEXTO,
-                             bg=est.COLOR_FONDO,
-                             fg=est.COLOR_TEXTO,
-                             pady=5).pack(padx=5)
-    fecha_prox_pago = tk.Entry(panel_para_modificar,
-                    justify="center")
-    fecha_prox_pago.pack(padx=15, pady=15)
-    ## --- Botones --- ##
-    # Agregar
-    crear_boton(panel_para_modificar,
-                "AGREGAR",
-                lambda: None,
-                est.FUENTE_BOTONES,
-                est.COLOR_BOTON,
-                est.COLOR_TEXTO,
-                est.COLOR_BOTON_EFECTO).pack(padx=15, pady=10, fill="both")
-    # Actualizar 
-    crear_boton(panel_para_modificar,
-                "ACTUALIZAR",
-                lambda: None,
-                est.FUENTE_BOTONES,
-                est.COLOR_BOTON,
-                est.COLOR_TEXTO,
-                est.COLOR_BOTON_EFECTO).pack(padx=15, pady=10, fill="both")
-    # Eliminar
-    crear_boton(panel_para_modificar,
-                "ELIMINAR",
-                lambda: None,
-                est.FUENTE_BOTONES,
-                est.COLOR_BOTON,
-                est.COLOR_TEXTO,
-                est.COLOR_BOTON_EFECTO).pack(padx=15, pady=10, fill="both")
-             
-    # --- Widget Treeview (Tabla) ---
-    columnas = ("ID", "Tipo de Membresía", "Vigencia", "Fecha de próximo pago")
+
+    columnas = ("ID", "Nombre", "Apellido", "Membresía", "Inicio", "Vencimiento", "Estado")
     tabla = ttk.Treeview(panel_tabla, columns=columnas, show="headings")
-    
+
     for col in columnas:
         tabla.heading(col, text=col)
-        tabla.column(col, anchor="center", width=120)
-    
-    # Agregar Scrollbar a la tabla
-    scrollbar = ttk.Scrollbar(panel_tabla, orient="vertical", command=tabla.yview) #nombra mejor variable!!!
+        tabla.column(col, anchor="center", width=60 if col == "ID" else 120)
+
+    scrollbar = ttk.Scrollbar(panel_tabla, orient="vertical", command=tabla.yview)
     tabla.configure(yscrollcommand=scrollbar.set)
     scrollbar.pack(side="right", fill="y")
     tabla.pack(expand=True, fill="both")
-    
-    # --- Funciones Auxiliares para la Interfaz ---
+
+    # ---- Panel para modificar (izquierda) ----
+    panel_para_modificar = tk.Frame(ventana, bg=est.COLOR_FONDO, padx=15, pady=15)
+    panel_para_modificar.pack(side="left", fill="y")
+
+    tk.Label(panel_para_modificar,
+             text="ESTADO DE\nMEMBRESÍA",
+             font=est.FUENTE_SUBTITULO,
+             bg=est.COLOR_FONDO,
+             fg=est.COLOR_TEXTO,
+             pady=20).pack(padx=15)
+
+    entrada_id = campo(panel_para_modificar, "ID Cliente:", "texto")
+    entrada_fecha_inicio = campo(panel_para_modificar, "Fecha inicio (DD/MM/AAAA):", "fecha")
+    entrada_estado = campo(panel_para_modificar, "Estado:", "texto")
+
+    for e in (entrada_id, entrada_fecha_inicio, entrada_estado):
+        e.config(state="readonly")
+
+    # ---- Auxiliares ----
+    def poner_texto(entry, texto):
+        entry.config(state="normal")
+        entry.delete(0, tk.END)
+        entry.insert(0, texto)
+        entry.config(state="readonly")
+
     def cargar_datos_tabla():
         for fila in tabla.get_children():
             tabla.delete(fila)
-        for cliente in tm.obtener_nombres_membresias():
+        for cliente in bam.estado_cliente():
             tabla.insert("", "end", values=cliente)
-    
-    def limpiar_campos():
-        tipo_membresia.delete(0, tk.END)
-        vigencia.delete(0, tk.END)
-        fecha_prox_pago.delete(0, tk.END)
-        id_cliente_seleccionado.set("")
-    
-    def al_seleccionar_registro(event):
-        item_seleccionado = tabla.focus()
-        if not item_seleccionado:
-            return
-        valores = tabla.item(item_seleccionado, "values")
-        if valores:
-            id_cliente_seleccionado.set(valores[0])
-            
-            tipo_membresia.delete(0, tk.END)
-            tipo_membresia.insert(0, valores[1])
-            
-            vigencia.delete(0, tk.END)
-            vigencia.insert(0, valores[2])
-            
-            fecha_prox_pago.delete(0, tk.END)
-            fecha_prox_pago.insert(0, valores[3])
-    
-    # Enlazar la selección en la tabla con la función de autollenado
-    tabla.bind("<<TreeviewSelect>>", al_seleccionar_registro)
-    
-    # --- Acciones de Botones ---
-    def accion_agregar():
-        n, a, t = tipo_membresia.get(), vigencia.get(), fecha_prox_pago.get()
-        if n and a and t:
-            tm.añadir_membresia(n, a, t)
-            cargar_datos_tabla()
-            limpiar_campos()
-        else:
-            messagebox.showwarning("Advertencia", "Por favor completa todos los campos.")
-    
-    def accion_actualizar():
-        c_id = id_cliente_seleccionado.get()
-        if not c_id:
-            messagebox.showwarning("Advertencia", "Selecciona un usuario de la tabla para modificar.")
-            return
-        n, a, t = tipo_membresia.get(), vigencia.get(), fecha_prox_pago.get()
-        tm.actualizar_cliente(c_id, n, a, t)
-        cargar_datos_tabla()
-        limpiar_campos()
-    
-    def accion_eliminar():
-        c_id = id_cliente_seleccionado.get()
-        if not c_id:
-            messagebox.showwarning("Advertencia", "Selecciona un usuario de la tabla para eliminar.")
-            return
-        tm.eliminar_membresia(c_id)
-        cargar_datos_tabla()
-        limpiar_campos()
-    # Carga inicial de registros
-    cargar_datos_tabla()
-'''
 
+    def limpiar_campos():
+        for e in (entrada_id, entrada_fecha_inicio, entrada_estado):
+            poner_texto(e, "")
+
+    def seleccionar(event):
+        item = tabla.focus()
+        if not item:
+            return
+        valores = tabla.item(item, "values")
+        if valores:
+            poner_texto(entrada_id, valores[0])
+            poner_texto(entrada_fecha_inicio, valores[4])
+            poner_texto(entrada_estado, valores[6])
+
+    tabla.bind("<<TreeviewSelect>>", seleccionar)
+
+    # ---- Acciones ----
+    def accion_renovar():
+        c_id = entrada_id.get().strip()
+        if not c_id:
+            messagebox.showwarning("Advertencia", "Selecciona un registro de la tabla.", parent=ventana)
+            return
+        if not confirmar_accion(ventana):
+            return
+        bam.renovar_membresia(c_id)
+        cargar_datos_tabla()
+        limpiar_campos()
+
+    def accion_desactivar():
+        c_id = entrada_id.get().strip()
+        if not c_id:
+            messagebox.showwarning("Advertencia", "Selecciona un registro de la tabla.", parent=ventana)
+            return
+        if not confirmar_accion(ventana):
+            return
+        bam.desactivar_membresia(c_id)
+        cargar_datos_tabla()
+        limpiar_campos()
+
+    # ---- Botones ----
+    crear_boton(panel_para_modificar,
+                "RENOVAR",
+                accion_renovar,
+                est.FUENTE_BOTONES,
+                est.COLOR_BOTON,
+                est.COLOR_TEXTO,
+                est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
+    crear_boton(panel_para_modificar,
+                "DESACTIVAR",
+                accion_desactivar,
+                est.FUENTE_BOTONES,
+                est.COLOR_BOTON,
+                est.COLOR_TEXTO,
+                est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
+
+    cargar_datos_tabla()
+
+
+## Ventana Tipo de Membresía
 def Crear_Ventana_Tipo_Membresia(ventana_padre):
     ventana_padre.withdraw()
     ventana = tk.Toplevel(ventana_padre)
@@ -489,50 +472,15 @@ def Crear_Ventana_Tipo_Membresia(ventana_padre):
     panel_para_modificar = tk.Frame(ventana, bg=est.COLOR_FONDO, padx=15, pady=15)
     panel_para_modificar.pack(side="left", fill="y")
 
-
-    # ---- Auxiliar para combobox ----
-    def cambiar_vista(evento=None):
-            opcion = menu_seleccion.get()
-    
-            f_beneficios.pack_forget()
-            f_planes.pack_forget()
-    
-            if opcion == "Beneficios":
-                f_beneficios.pack(fill="x", pady=10)
-            elif opcion == "Planes":
-                f_planes.pack(fill="x", pady=10)
-
-
     # ------- Titulo -------
     tk.Label(panel_para_modificar, text="Tipos de Membresía",
              font=est.FUENTE_SUBTITULO, bg=est.COLOR_FONDO,
              fg=est.COLOR_TEXTO, pady=20).pack(padx=15)
-    
-    membresias = ["Beneficios", "Planes"]
-    menu_seleccion = ttk.Combobox(panel_para_modificar,
-                                  values=membresias,
-                                  state="readonly")
-    menu_seleccion.set("Planes")
-    menu_seleccion.pack(pady=10)
-    menu_seleccion.bind("<<ComboboxSelected>>", cambiar_vista)
 
-    # Este no cambia en las vistas
     entrada_nombre = campo(panel_para_modificar, "Nombre:", "texto")
-
-    Frame_dinamico = tk.Frame(panel_para_modificar, bg=est.COLOR_FONDO, padx=15, pady=15)
-    Frame_dinamico.pack(fill="x")
-
-    # Frames para alternar entre los combobox
-    f_planes = tk.Frame(Frame_dinamico,  bg=est.COLOR_FONDO, padx=15, pady=15)
-    entrada_precio = campo(f_planes, "Precio:", "numeros")
-    entrada_cant_clientes = campo(f_planes, "Cantidad Clientes:", "numeros")
+    entrada_precio = campo(panel_para_modificar, "Precio:", "numeros")
+    entrada_cant_clientes = campo(panel_para_modificar, "Cantidad Clientes:", "numeros")
     entrada_cant_clientes.config(state="readonly")
-
-    f_beneficios = tk.Frame(Frame_dinamico, bg=est.COLOR_FONDO, padx=15, pady=15)
-    entrada_acceso_instalaciones = campo(f_beneficios, "Instalaciones:", "texto")
-    entrada_entrenamiento_per = campo(f_beneficios, "Entrenamiento Personalizado:", "texto")
-
-    cambiar_vista()
 
     # ---- Funciones Auxiliares ----
     def cargar_datos_tabla():
@@ -542,9 +490,9 @@ def Crear_Ventana_Tipo_Membresia(ventana_padre):
             tabla.insert("", "end", values=fila)
 
     def limpiar_datos():
-        for e in (entrada_nombre, entrada_precio,
-                  entrada_acceso_instalaciones, entrada_entrenamiento_per):
+        for e in (entrada_nombre, entrada_precio):
             e.delete(0, tk.END)
+            e.config(bg="#FFFFFF")
 
         entrada_cant_clientes.config(state="normal")
         entrada_cant_clientes.delete(0, tk.END)
@@ -563,9 +511,11 @@ def Crear_Ventana_Tipo_Membresia(ventana_padre):
 
         entrada_nombre.delete(0, tk.END)
         entrada_nombre.insert(0, valores[0])
+        entrada_nombre.config(bg="#FFFFFF")
 
         entrada_precio.delete(0, tk.END)
         entrada_precio.insert(0, valores[1])
+        entrada_precio.config(bg="#FFFFFF")
 
         entrada_cant_clientes.config(state="normal")
         entrada_cant_clientes.delete(0, tk.END)
@@ -621,21 +571,21 @@ def Crear_Ventana_Tipo_Membresia(ventana_padre):
     # ---- Botones ----
     crear_boton(panel_para_modificar, 
                 "AGREGAR", 
-                lambda: (accion_agregar()),
+                accion_agregar,
                 est.FUENTE_BOTONES, 
                 est.COLOR_BOTON, 
                 est.COLOR_TEXTO,
                 est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
     crear_boton(panel_para_modificar, 
                 "Modificar", 
-                lambda: (accion_actualizar()),
+                accion_actualizar,
                 est.FUENTE_BOTONES, 
                 est.COLOR_BOTON, 
                 est.COLOR_TEXTO,
                 est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
     crear_boton(panel_para_modificar, 
                 "ELIMINAR", 
-                lambda: (accion_eliminar()),
+                accion_eliminar,
                 est.FUENTE_BOTONES, 
                 est.COLOR_BOTON, 
                 est.COLOR_TEXTO,
@@ -644,152 +594,87 @@ def Crear_Ventana_Tipo_Membresia(ventana_padre):
     cargar_datos_tabla()
 
 
+## Ventana de Inversión
 def Crear_Ventana_Inversion(ventana_padre):
-        ventana_padre.withdraw()
-        ventana = tk.Toplevel(ventana_padre)
-        ventana.title("Inversión")
-        ventana.geometry("1000x600")
-        ventana.configure(bg=est.COLOR_FONDO)
-        # Si el usuario cierra la ventana regresa al menu inicial
-        ventana.protocol("WM_DELETE_WINDOW", lambda:(ventana_padre.deiconify(), ventana.destroy())) 
+    ventana_padre.withdraw()
+    ventana = tk.Toplevel(ventana_padre)
+    ventana.title("Inversión")
+    ventana.geometry("1300x700")
+    ventana.resizable(False, False)
+    ventana.configure(bg=est.COLOR_FONDO)
+    ventana.protocol("WM_DELETE_WINDOW",
+                     lambda: (ventana_padre.deiconify(), ventana.destroy()))
+
+    panel_tabla = tk.Frame(ventana, bg=est.FONDO_TABLA)
+    panel_tabla.pack(side="top", expand=True, fill="both", padx=15, pady=15)
+
+    columnas = ("Membresía", "Mensual", "Anual")
+    tabla = ttk.Treeview(panel_tabla, columns=columnas, show="headings")
+
+    for col in columnas:
+        tabla.heading(col, text=col)
+        tabla.column(col, anchor="center", width=150)
+
+    scrollbar = ttk.Scrollbar(panel_tabla, orient="vertical", command=tabla.yview)
+    tabla.configure(yscrollcommand=scrollbar.set)
+    scrollbar.pack(side="right", fill="y")
+    tabla.pack(expand=True, fill="both")
+
+
+    panel_totales = tk.Frame(ventana, bg=est.COLOR_FONDO)
+    panel_totales.pack(side="bottom", fill="x", padx=15, pady=15)
+
+
+    label_mensual = tk.Label(panel_totales, 
+                             text="Ganancia Total Mensual: $0.00", 
+                             font=est.FUENTE_SUBTITULO, 
+                             bg=est.COLOR_FONDO, 
+                             fg=est.COLOR_TEXTO)
+    label_mensual.pack(side="left", expand=True)
+
+    label_anual = tk.Label(panel_totales, 
+                           text="Ganancia Total Anual: $0.00", 
+                           font=est.FUENTE_SUBTITULO, 
+                           bg=est.COLOR_FONDO, 
+                           fg=est.COLOR_TEXTO)
+    label_anual.pack(side="right", expand=True)
+
+
+    def cargar_datos_tabla():
         
-        # Creamos el Frame donde ingresar los datos
-        panel_para_modificar = tk.Frame(ventana,
-                                bg=est.COLOR_FONDO,
-                                padx=15,
-                                pady=15)
-        panel_para_modificar.pack(side="left", fill="y")
-        # Creamos el Frame para la tabla
-        panel_tabla = tk.Frame(ventana,
-                                bg=est.FONDO_TABLA)
-        panel_tabla.pack(side="right", expand=True, fill="both", padx=15, pady=15)
+        for fila in tabla.get_children():
+            tabla.delete(fila)
+            
+     
+        for fila in tm.ver_ganancias_proyectadas():
+            nombre, mensual, anual = fila
+            tabla.insert("", "end", values=(nombre, f"${mensual:.2f}", f"${anual:.2f}"))
+            
+   
+        total_m, total_a = tm.ver_ganancias_totales()
+        label_mensual.config(text=f"Ganancia Total Mensual: ${total_m:.2f}")
+        label_anual.config(text=f"Ganancia Total Anual: ${total_a:.2f}")
 
-        # ------ Titulo -----
-        tk.Label(panel_para_modificar,
-                text="INVERSIÓN",
-                font=est.FUENTE_SUBTITULO,
-                bg=est.COLOR_FONDO,
-                fg=est.COLOR_TEXTO,
-                pady=20
-                ).pack(padx=15)
-        
-        # --- ComboBox para el menú desplegable ---
-        # Lista para el combobox
-        opciones = ["Costos", "Zonas"]
-        menu_seleccion = ttk.Combobox(panel_para_modificar,
-                     values=opciones,
-                     state="readonly")
-        menu_seleccion.pack(pady=10)
-        
-        # Frames donde se guardan los Entrys
-        entrys_Zonas = tk.Frame(panel_para_modificar,
-                                bg=est.COLOR_FONDO,
-                                padx=15,
-                                pady=5)
-        tk.Label(entrys_Zonas,
-                 text="Precio:",
-                 font=est.FUENTE_TEXTO,
-                 bg=est.COLOR_FONDO,
-                 fg=est.COLOR_TEXTO,
-                 pady=5).pack(padx=5)
-        nombre_zona = tk.Entry(entrys_Zonas,
-                        justify="center")
-        nombre_zona.pack(padx=15, pady=15)
+    cargar_datos_tabla()
 
-        entrys_Costos = tk.Frame(panel_para_modificar,
-                                 bg=est.COLOR_FONDO,
-                                 padx=15,
-                                 pady=5)
-        tk.Label(entrys_Costos,
-                 text="Precio:",
-                 font=est.FUENTE_TEXTO,
-                 bg=est.COLOR_FONDO,
-                 fg=est.COLOR_TEXTO,
-                 pady=5).pack(padx=5)
-        costo_unico = tk.Entry(entrys_Zonas,
-                        justify="center")
-        costo_unico.pack(padx=15, pady=15)
-
-
-def Crear_Ventana_Instalaciones(ventana_padre):
-        ventana_padre.withdraw()
-        ventana = tk.Toplevel(ventana_padre)
-        ventana.title("Instalaciones")
-        ventana.geometry("1000x600")
-        ventana.configure(bg=est.COLOR_FONDO)
-        # Si el usuario cierra la ventana regresa al menu inicial
-        ventana.protocol("WM_DELETE_WINDOW", lambda:(ventana_padre.deiconify(), ventana.destroy())) 
-        
-        # Creamos el Frame donde ingresar los datos
-        panel_para_modificar = tk.Frame(ventana,
-                                bg=est.COLOR_FONDO,
-                                padx=15,
-                                pady=15)
-        panel_para_modificar.pack(side="left", fill="y")
-        # Creamos el Frame para la tabla
-        panel_tabla = tk.Frame(ventana,
-                                bg=est.FONDO_TABLA)
-        panel_tabla.pack(side="right", expand=True, fill="both", padx=15, pady=15)
-
-        tk.Label(panel_para_modificar,
-                text="INSTALACIONES",
-                font=est.FUENTE_SUBTITULO,
-                bg=est.COLOR_FONDO,
-                fg=est.COLOR_TEXTO,
-                pady=20
-                ).pack(padx=15)
-        # Entrys
-        nombre = tk.Entry(panel_para_modificar,
-                        justify="center")
-        nombre.pack(padx=15, pady=15)
-
-        apellido = tk.Entry(panel_para_modificar,
-                        justify="center")
-        apellido.pack(padx=15, pady=15)
-        
-        tipo_membresia = tk.Entry(panel_para_modificar,
-                        justify="center")
-        tipo_membresia.pack(padx=15, pady=15)
-
-        telefono = tk.Entry(panel_para_modificar,
-                        justify="center")
-        telefono.pack(padx=15, pady=15)
-
-
-## SE NECESITA MODIFICAR ESTO PORQUE ES UNA COPIA DE CREAR_VENTANA_CLIENTES
+## Ventana Empleados
 def Crear_Ventana_Empleados(ventana_padre):
     ventana_padre.withdraw()
     ventana = tk.Toplevel(ventana_padre)
     ventana.title("Empleados")
     ventana.geometry("1300x700")
+    ventana.resizable(False, False)
     ventana.configure(bg=est.COLOR_FONDO)
     ventana.protocol("WM_DELETE_WINDOW",
                      lambda: (ventana_padre.deiconify(), ventana.destroy()))
 
-    id_cliente_seleccionado = tk.StringVar()
+    id_empleado_seleccionado = tk.StringVar()
 
     # ---- Panel de la tabla (derecha) ----
     panel_tabla = tk.Frame(ventana, bg=est.FONDO_TABLA)
     panel_tabla.pack(side="right", expand=True, fill="both", padx=15, pady=15)
 
-    # ---- Panel para modificar (izquierda) ----
-    panel_para_modificar = tk.Frame(ventana, bg=est.COLOR_FONDO, padx=15, pady=15)
-    panel_para_modificar.pack(side="left", fill="y")
-
-    tk.Label(panel_para_modificar, text="Empleados",
-             font=est.FUENTE_SUBTITULO, bg=est.COLOR_FONDO,
-             fg=est.COLOR_TEXTO, pady=20).pack(padx=15)
-
-
-
-    entrada_nombre    = campo("Nombre:")
-    entrada_apellido  = campo("Apellido:")
-    entrada_telefono  = campo("Teléfono:")
-    entrada_membresia = campo("Tipo de membresía:")
-    entrada_fecha     = campo("Fecha nacimiento (DDMMAAAA):")
-
-    # ---- Treeview con 6 columnas ----
-    columnas = ("ID", "Nombre", "Apellido", "Teléfono", "Membresía", "Fecha Nac.")
+    columnas = ("ID", "Nombre", "Apellido", "Teléfono", "Puesto")
     tabla = ttk.Treeview(panel_tabla, columns=columnas, show="headings")
 
     for col in columnas:
@@ -801,18 +686,32 @@ def Crear_Ventana_Empleados(ventana_padre):
     scrollbar.pack(side="right", fill="y")
     tabla.pack(expand=True, fill="both")
 
+    # ---- Panel para modificar (izquierda) ----
+    panel_para_modificar = tk.Frame(ventana, bg=est.COLOR_FONDO, padx=15, pady=15)
+    panel_para_modificar.pack(side="left", fill="y")
+
+    tk.Label(panel_para_modificar,
+             text="EMPLEADOS",
+             font=est.FUENTE_SUBTITULO,
+             bg=est.COLOR_FONDO,
+             fg=est.COLOR_TEXTO,
+             pady=20).pack(padx=15)
+
+    entrada_nombre = campo(panel_para_modificar, "Nombre:", "texto")
+    entrada_apellido = campo(panel_para_modificar, "Apellido:", "texto")
+    entrada_telefono = campo(panel_para_modificar, "Teléfono:", "telefono")
+    entrada_puesto = campo(panel_para_modificar, "Contraseña:", "texto")
+
     # ---- Auxiliares ----
     def cargar_datos_tabla():
         for fila in tabla.get_children():
             tabla.delete(fila)
-        for cliente in bd_c.ver_clientes():
-            tabla.insert("", "end", values=cliente)
+        # Conectar BD aquí
 
     def limpiar_campos():
-        for e in (entrada_nombre, entrada_apellido, entrada_telefono,
-                  entrada_membresia, entrada_fecha):
+        for e in (entrada_nombre, entrada_apellido, entrada_telefono, entrada_puesto):
             e.delete(0, tk.END)
-        id_cliente_seleccionado.set("")
+        id_empleado_seleccionado.set("")
 
     def al_seleccionar_registro(event):
         item = tabla.focus()
@@ -821,10 +720,9 @@ def Crear_Ventana_Empleados(ventana_padre):
         valores = tabla.item(item, "values")
         if not valores:
             return
-        id_cliente_seleccionado.set(valores[0])
+        id_empleado_seleccionado.set(valores[0])
         for entry, valor in zip(
-            (entrada_nombre, entrada_apellido, entrada_telefono,
-             entrada_membresia, entrada_fecha),
+            (entrada_nombre, entrada_apellido, entrada_telefono, entrada_puesto),
             valores[1:]
         ):
             entry.delete(0, tk.END)
@@ -834,68 +732,35 @@ def Crear_Ventana_Empleados(ventana_padre):
 
     # ---- Acciones ----
     def accion_agregar():
-        n  = entrada_nombre.get().strip()
-        a  = entrada_apellido.get().strip()
-        t  = entrada_telefono.get().strip()
-        tm = entrada_membresia.get().strip()
-        f  = entrada_fecha.get().strip()
-
-        if not (n and a and t and tm and f):
-            messagebox.showwarning("Advertencia", "Completa todos los campos.")
-            return
-        try:
-            nuevo_id = bd_c.agregar_cliente(n, a, t, tm, f)
-        except ValueError as e:
-            messagebox.showerror("Error", str(e))
-            return
-        messagebox.showinfo("Cliente agregado", f"ID asignado: {nuevo_id}")
-        cargar_datos_tabla()
-        limpiar_campos()
+        pass
 
     def accion_actualizar():
-        c_id = id_cliente_seleccionado.get()
-        if not c_id:
-            messagebox.showwarning("Advertencia", "Selecciona un cliente primero.")
-            return
-        try:
-            ok = bd_c.modificar_cliente(
-                c_id,
-                nombre=entrada_nombre.get().strip(),
-                apellido=entrada_apellido.get().strip(),
-                telefono=entrada_telefono.get().strip(),
-                tipo_membresia=entrada_membresia.get().strip(),
-                fecha_nacimiento=entrada_fecha.get().strip()
-            )
-        except ValueError as e:
-            messagebox.showerror("Error", str(e))
-            return
-        if not ok:
-            messagebox.showerror("Error", "El ID no existe en la base de datos.")
-            return
-        cargar_datos_tabla()
-        limpiar_campos()
+        pass
 
     def accion_eliminar():
-        c_id = id_cliente_seleccionado.get()
-        if not c_id:
-            messagebox.showwarning("Advertencia", "Selecciona un cliente primero.")
-            return
-        if not messagebox.askyesno("Confirmar", f"¿Eliminar al cliente {c_id}?"):
-            return
-        bd_c.eliminar_cliente(c_id)
-        cargar_datos_tabla()
-        limpiar_campos()
+        pass
 
     # ---- Botones ----
-    crear_boton(panel_para_modificar, "AGREGAR", accion_agregar,
-                est.FUENTE_BOTONES, est.COLOR_BOTON, est.COLOR_TEXTO,
+    crear_boton(panel_para_modificar,
+                "AGREGAR",
+                accion_agregar,
+                est.FUENTE_BOTONES,
+                est.COLOR_BOTON,
+                est.COLOR_TEXTO,
                 est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
-    crear_boton(panel_para_modificar, "ACTUALIZAR", accion_actualizar,
-                est.FUENTE_BOTONES, est.COLOR_BOTON, est.COLOR_TEXTO,
+    crear_boton(panel_para_modificar,
+                "ACTUALIZAR",
+                accion_actualizar,
+                est.FUENTE_BOTONES,
+                est.COLOR_BOTON,
+                est.COLOR_TEXTO,
                 est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
-    crear_boton(panel_para_modificar, "ELIMINAR", accion_eliminar,
-                est.FUENTE_BOTONES, est.COLOR_BOTON, est.COLOR_TEXTO,
+    crear_boton(panel_para_modificar,
+                "ELIMINAR",
+                accion_eliminar,
+                est.FUENTE_BOTONES,
+                est.COLOR_BOTON,
+                est.COLOR_TEXTO,
                 est.COLOR_BOTON_EFECTO).pack(padx=15, pady=8, fill="both")
 
     cargar_datos_tabla()
-

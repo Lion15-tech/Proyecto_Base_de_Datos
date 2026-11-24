@@ -1,73 +1,91 @@
 import sqlite3
 from datetime import datetime, timedelta
-DATABASE= "GYM.db"
+
+DATABASE = "GYM.db"
 
 def conectar():
     return sqlite3.connect(DATABASE)
 
 def crear_tabla():
     with conectar() as conect:
-        conect.execute("""CREATE A TABLEIF NOT EXISTS estado_membresia(
+        conect.execute("""CREATE TABLE IF NOT EXISTS estado_membresia(
         cliente_id TEXT PRIMARY KEY,
         fecha_inicio TEXT NOT NULL,
-        FOREIGN KEY cliente_id REFERENCES clientes(ID)) """)
+        fecha_vencimiento TEXT,
+        FOREIGN KEY (cliente_id) REFERENCES clientes(ID))""")
+        try:
+            conect.execute("ALTER TABLE estado_membresia ADD COLUMN fecha_vencimiento TEXT")
+        except sqlite3.OperationalError:
+            pass
 
-def registrar_estado_inicial(cliente_id):
+def registrar_estado_inicial(cliente_id, fecha_inicio=None):
+    fecha_hoy = fecha_inicio if fecha_inicio else datetime.now().strftime("%d/%m/%Y")
+    vencimiento = (datetime.strptime(fecha_hoy, "%d/%m/%Y") + timedelta(days=30)).strftime("%d/%m/%Y")
+    with conectar() as conect:
+        conect.execute(
+            "INSERT INTO estado_membresia(cliente_id, fecha_inicio, fecha_vencimiento) VALUES (?,?,?)",
+            (cliente_id, fecha_hoy, vencimiento)
+        )
 
-    fecha_hoy= datetime.now().strftime("%d/%m/%Y")
-    
+def renovar_membresia(cliente_id):
     with conectar() as conect:
-            conect.execute("INSERT INTO estado_membresia(cliente,fecha_inicio) VALUES (?,?)",
-                        (cliente_id, fecha_hoy))
-            
-def actualizar_vigencia(cliente_id):
-    #calculmaos la fecha de hoy mas 25 días
-    fecha_renovacion = datetime.now() + timedelta(days=25)
-    nueva_fecha_str = fecha_renovacion.strftime("%d/%m/%Y")
-    
-    with conectar() as conect:
+        fila = conect.execute(
+            "SELECT fecha_inicio, fecha_vencimiento FROM estado_membresia WHERE cliente_id = ?",
+            (cliente_id,)
+        ).fetchone()
+        if not fila:
+            return False
+
+        fecha_inicio, fecha_venc = fila
+        hoy = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+
+        if fecha_venc:
+            venc_dt = datetime.strptime(fecha_venc, "%d/%m/%Y")
+        else:
+            venc_dt = datetime.strptime(fecha_inicio, "%d/%m/%Y") + timedelta(days=30)
+
+        base = venc_dt if venc_dt >= hoy else hoy
+        nuevo_venc = (base + timedelta(days=30)).strftime("%d/%m/%Y")
+
         cursor = conect.execute(
-            "UPDATE estado_membresia SET fecha_inicio = ? WHERE cliente_id = ?",
-            (nueva_fecha_str, cliente_id)
+            "UPDATE estado_membresia SET fecha_vencimiento = ? WHERE cliente_id = ?",
+            (nuevo_venc, cliente_id)
         )
         return cursor.rowcount > 0
 
-def modificar_fecha(cliente_id):
+def desactivar_membresia(cliente_id):
+    ayer = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
     with conectar() as conect:
-        cursor= conect.execute("UPDATE estado_membresia SET fecha_inicio = ? WHERE cliente_id = ?",
-                               (cliente_id))
+        cursor = conect.execute(
+            "UPDATE estado_membresia SET fecha_vencimiento = ? WHERE cliente_id = ?",
+            (ayer, cliente_id)
+        )
         return cursor.rowcount > 0
 
+def eliminar_estado(cliente_id):
+    with conectar() as conect:
+        cursor = conect.execute("DELETE FROM estado_membresia WHERE cliente_id = ?", (cliente_id,))
+        return cursor.rowcount > 0
 
-#arreglar 
 def estado_cliente():
     with conectar() as conect:
-        filas = conect.execute("""SELECT c.id,c.nombre,c.apellido,c.tipo_membresia, em.fecha_inicio
+        filas = conect.execute("""SELECT c.id, c.nombre, c.apellido, c.tipo_membresia, em.fecha_inicio, em.fecha_vencimiento
         FROM clientes c
         JOIN estado_membresia em ON c.ID = em.cliente_id""").fetchall()
 
-        resultados=[]
-
-        hoy= datetime.now()
+        resultados = []
+        hoy = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
         for fila in filas:
-            id_cliente, nombre, apellido, membresia, fecha_inicio1 = fila
+            id_cliente, nombre, apellido, membresia, fecha_inicio1, fecha_venc1 = fila
 
-            fecha_inicio2= datetime.strptime(fecha_inicio1, "%d/%m%/%Y")
-
-            fecha_fin1= fecha_inicio2 + timedelta(days=30)
-            fecha_fin2 = fecha_fin1.strftime("%d/%m/%Y")
-
-            if  hoy <= fecha_fin1:
-                estado= "ACTIVA"
+            if fecha_venc1:
+                fecha_fin1 = datetime.strptime(fecha_venc1, "%d/%m/%Y")
+                fecha_fin2 = fecha_venc1
             else:
-                estado= "INACTIVA"
+                fecha_fin1 = datetime.strptime(fecha_inicio1, "%d/%m/%Y") + timedelta(days=30)
+                fecha_fin2 = fecha_fin1.strftime("%d/%m/%Y")
 
-            resultados.append((id_cliente,nombre,apellido,membresia,fecha_inicio1, fecha_fin2, estado))
-        return resultados        
-
-
-
-
-
-#ID, tipo membresia vigencia, fecha proximo pago
+            estado = "ACTIVA" if hoy <= fecha_fin1 else "INACTIVA"
+            resultados.append((id_cliente, nombre, apellido, membresia, fecha_inicio1, fecha_fin2, estado))
+        return resultados

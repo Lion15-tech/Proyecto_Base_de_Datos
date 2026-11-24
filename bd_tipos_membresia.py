@@ -76,6 +76,33 @@ if __name__ == "__main__":
     nuevo2= añadir_membresia("Estandar", 250)
     nuevo3= añadir_membresia("Ultra", 500)
 
+def ver_ganancias_proyectadas():
+    datos_base = ver_membresia()
+    resultados = []
+    
+    for fila in datos_base:
+        nombre = fila[0]
+        precio = fila[1]
+        cantidad = fila[2]
+        
+        ganancia_mensual = precio * cantidad
+        ganancia_anual = ganancia_mensual * 12
+        
+        resultados.append((nombre, ganancia_mensual, ganancia_anual))
+    return resultados
+
+def ver_ganancias_totales():
+    
+    ganancias_por_membresia = ver_ganancias_proyectadas()
+    
+    total_mensual = 0
+    total_anual = 0
+    
+    for fila in ganancias_por_membresia:
+        total_mensual += fila[1]
+        total_anual += fila[2]
+    return total_mensual, total_anual
+
 
 
 """

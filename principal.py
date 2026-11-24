@@ -70,18 +70,8 @@ def crear_ventana_principal():
     # ---- Inversión ----
     func.crear_boton(
         ventana_principal, 
-        "Inversión", 
+        "Ganancias", 
         lambda: func.Crear_Ventana_Inversion(ventana_principal), 
-        est.FUENTE_TEXTO,
-        est.COLOR_BOTON, 
-        est.COLOR_TEXTO, 
-        est.COLOR_BOTON_EFECTO).pack(padx=50, pady=20, fill="both")
-
-    # ----- Instalaciones ----
-    func.crear_boton(
-        ventana_principal, 
-        "Instalaciones", 
-        lambda: func.Crear_Ventana_Instalaciones(ventana_principal), 
         est.FUENTE_TEXTO,
         est.COLOR_BOTON, 
         est.COLOR_TEXTO, 
@@ -90,7 +80,7 @@ def crear_ventana_principal():
     # ----- Empleados/Admins ----
     func.crear_boton(
         ventana_principal, 
-        "Empleados/Admins", 
+        "Gerentes", 
         lambda: func.Crear_Ventana_Empleados(ventana_principal), 
         est.FUENTE_TEXTO,
         est.COLOR_BOTON, 
