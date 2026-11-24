@@ -674,7 +674,7 @@ def Crear_Ventana_Empleados(ventana_padre):
     panel_tabla = tk.Frame(ventana, bg=est.FONDO_TABLA)
     panel_tabla.pack(side="right", expand=True, fill="both", padx=15, pady=15)
 
-    columnas = ("ID", "Nombre", "Apellido", "Teléfono", "Puesto")
+    columnas = ("ID", "Nombre", "Apellido", "Teléfono", "Contraseña")
     tabla = ttk.Treeview(panel_tabla, columns=columnas, show="headings")
 
     for col in columnas:
